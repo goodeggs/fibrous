@@ -199,3 +199,11 @@ describe 'fibrous', ->
 
       results = fibrous.wait([future1, future2], future3)
       expect(results).toEqual [[5,6],7]
+
+  describe 'middleware', ->
+
+    it 'runs in a fiber', (done) ->
+      expect(Fiber.current).toBeFalsy()
+      fibrous.middleware {}, {}, () ->
+        expect(Fiber.current).toBeTruthy()
+        done()

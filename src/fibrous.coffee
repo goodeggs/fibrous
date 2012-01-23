@@ -1,6 +1,5 @@
 require 'fibers'
 Future = require 'fibers/future'
-#logger = require './logger'
 
 
 module.exports = fibrous = (f) ->
@@ -48,18 +47,6 @@ fibrous.require = (modName) ->
   fibrous.wrap result
   result
 
-#
-## Run the subsequent steps in a Fiber (at least until some non-cooperative async operation)
-#fibrous.middleware = (req, res, next) ->
-#  process.nextTick ->
-#    Fiber ->
-#      try
-#        next()
-#      catch e
-#        # We expect any errors which bubble up the fiber will be handled by the router
-#        logger.error('Unexpected error bubble up to the top of the fiber', e)
-#    .run()
-#
 fibrous.wait = (futures...) ->
   getResults = (futureOrArray) ->
     return futureOrArray.get() if (futureOrArray instanceof Future)
@@ -70,3 +57,14 @@ fibrous.wait = (futures...) ->
   result = result[0] if result.length == 1
   result
 
+
+# Run the subsequent steps in a Fiber (at least until some non-cooperative async operation)
+fibrous.middleware = (req, res, next) ->
+  process.nextTick ->
+    Fiber ->
+      try
+        next()
+      catch e
+        # We expect any errors which bubble up the fiber will be handled by the router
+        console.error('Unexpected error bubble up to the top of the fiber:', e?.stack or e)
+    .run()
