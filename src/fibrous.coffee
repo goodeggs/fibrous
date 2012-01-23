@@ -3,25 +3,16 @@ Future = require 'fibers/future'
 #logger = require './logger'
 
 
-
-#Function.prototype.fibrous = (that, args...) ->
-#  f = @
-#  futureF = Future.wrap(f)
-#  futureF.apply(that, args)
-#
 module.exports = fibrous = (f) ->
-#  futureF = f.future()
-#  (args...) ->
-#    if Fiber.current
-#      return futureF.apply(@, args)
-#    else
-#      callback = args.pop()
-#      throw new Error("running #{futureF} outside of a Fiber, so expected a callback") unless callback instanceof Function
-#      future = futureF.apply(@, args)
-#      future.resolve (err, result) ->
-#        # Ensure the callback is called outside the fiber (to avoid switching to fibrous versions of method calls from the async expecting callback)
-#        process.nextTick ->
-#          callback(err, result)
+  futureFn = f.future() # handles all the heavy lifting of inheriting an existing fiber when appropriate
+  asyncFn = (args...) ->
+    callback = args.pop()
+    throw new Error("Fibrous method expects a callback") unless callback instanceof Function
+    future = futureFn.apply(@, args)
+    future.resolve callback
+  asyncFn.__fibrousFutureFn__ = futureFn
+  asyncFn
+
 
 fibrous.wrap = (obj) ->
   return obj if obj.__fibrouswrapped__
@@ -36,16 +27,21 @@ fibrous.wrap = (obj) ->
   for key, fn of obj when typeof fn == 'function'
     do (key) ->
       obj.future[key] = (args...) ->
+        #relookup the method every time to pick up reassignments of key on obj
+        fn = obj[key]
+
+        #don't create unnecessary fibers and futures
+        return fn.__fibrousFutureFn__.apply(obj, args) if fn.__fibrousFutureFn__
+
         future = new Future
         args.push(future.resolver())
-        #relookup the method every time to pick up reassignments of key on obj
-        obj[key].apply(obj, args)
+        fn.apply(obj, args)
         future
 
       obj.sync[key] = (args...) ->
         obj.future[key](args...).wait()
-
   obj
+
 
 fibrous.require = (modName) ->
   result = require modName
@@ -64,7 +60,13 @@ fibrous.require = (modName) ->
 #        logger.error('Unexpected error bubble up to the top of the fiber', e)
 #    .run()
 #
-#fibrous.wait = (futures...) ->
-#  Future.wait(futures...)
-#  future.get() for future in futures # return an array of the results
+fibrous.wait = (futures...) ->
+  getResults = (futureOrArray) ->
+    return futureOrArray.get() if (futureOrArray instanceof Future)
+    getResults(i) for i in futureOrArray
+
+  Future.wait(futures...)
+  result = getResults(futures) # return an array of the results
+  result = result[0] if result.length == 1
+  result
 
