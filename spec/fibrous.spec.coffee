@@ -50,6 +50,13 @@ describe 'fibrous', ->
       expect(obj).toBe originalObj
       expect(returned).toBe originalObj
 
+    it "can wrap a function", ->
+      obj = ->
+      obj.method = ->
+
+      fibrous.wrap(obj)
+      expect(obj.future.method).toBeDefined()
+
     it "doesn't rewrap objects", ->
       originalFuture = asyncObj.future
       fibrous.wrap(asyncObj)

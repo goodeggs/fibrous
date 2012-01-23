@@ -1,7 +1,6 @@
 require 'fibers'
 Future = require 'fibers/future'
 
-
 module.exports = fibrous = (f) ->
   futureFn = f.future() # handles all the heavy lifting of inheriting an existing fiber when appropriate
   asyncFn = (args...) ->
@@ -16,11 +15,14 @@ module.exports = fibrous = (f) ->
 fibrous.wrap = (obj) ->
   return obj if obj.__fibrouswrapped__
 
-  for attr in ['sync', 'future']
-    throw new Error("the object to wrap already has a .#{attr} attribute [#{obj[attr]}]") if obj[attr]?
+  throw new Error("the object to wrap already has a .sync attribute [#{obj.sync}]") if obj.sync?
+
+  # When wrapping functions, we just attach our methods ro node-fibers Function prototype future method.
+  if obj.future? and obj.future != Function.prototype.future
+    throw new Error("the object to wrap already has a .future attribute [#{obj.future}]")
 
   obj.__fibrouswrapped__ = true
-  obj.future = {}
+  obj.future ?= {}
   obj.sync = {}
 
   for key, fn of obj when typeof fn == 'function'
