@@ -1,0 +1,27 @@
+{
+  "name"            : "fibrous"
+, "version"         : "0.0.1"
+, "description"     : "A library to help with fibers"
+, "homepage"        : "http://github.com/goodeggs/fibrous"
+, "repository"      : { "type" : "git"
+                      , "url"  : "https://github.com/goodeggs/fibrous.git"
+                      }
+, "keywords"        : ["fiber", "fibers", "coroutine"]
+, "author"          : "Randy Puro <randy@goodeggsinc.com>"
+, "contributors"    : [ "Bob Zoller <bob@goodeggsinc.com>"
+                      , "Alon Salant <alon@goodeggsinc.com>"
+                      ]
+, "maintainers"     : "Randy Puro <randy@goodeggsinc.com>"
+, "licenses"        : ["MIT"]
+, "dependencies"    : { "fibers" : "0.6.x"
+                      }
+, "devDependencies" : { "jasmine-node" : "1.0.x"
+                      , "coffee-script" : "1.1.x"
+                      }
+, "main"            : "lib/fibrous"
+, "engine" : { "node" : ">=0.6"
+             }
+, "scripts" : { "pretest" : "coffee -cl -o lib src"
+              , "test" : "jasmine-node --coffee spec"
+              }
+}
