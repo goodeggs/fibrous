@@ -16,3 +16,4 @@ usage
   The wrap method introduces future and sync versions of all the methods in the wrapped object.
   The require method will require a module and wrap it.
   The wait method is a convenience passthrough to Fiber.wait which returns the results of all the futures.
+  The specHelper.addFiberVariants method can be used to add variants of it, beforeEach, etc which run in a fiber
