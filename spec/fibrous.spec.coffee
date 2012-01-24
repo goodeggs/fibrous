@@ -99,10 +99,25 @@ describe 'fibrous', ->
       catch e
         expect(e.message).toEqual 'the object to wrap already has a .future attribute [2020]'
 
-    itFiber 'can wrap a prototype, handling this, etc', ->
-      InstanceCls = (@value) ->
-      InstanceCls.prototype =
+    it 'can handle getters which throw exceptions (eg on prototypes)', ->
+      # mongoose defines some getters in this way
+      obj = {}
+      obj.__defineGetter__ 'something', ->
+        throw new Error('this getter does not work in this context')
+
+      fibrous.wrap(obj)
+      # we should not get an error
+
+    itFiber 'can wrap a prototype, handling this, inheritance, etc', ->
+      class SuperCls
         value: 1
+        supermethod: (input, cb) ->
+          process.nextTick =>
+            cb(null, input * @value)
+
+      class InstanceCls extends SuperCls
+        constructor: (@value) ->
+        value: 2
         add: (input, cb) ->
           process.nextTick =>
             cb(null, input + @value)
@@ -115,6 +130,8 @@ describe 'fibrous', ->
 
       result = instance.sync.add(4)
       expect(result).toEqual 6
+
+      expect(instance.sync.supermethod(5)).toEqual 10
 
   describe 'require', ->
     itFiber 'works with built in modules', ->

@@ -29,8 +29,14 @@ fibrous.wrap = (obj, options = {}) ->
   class SyncMethods
     constructor: (@that) ->
 
-  for key, fn of obj when typeof fn == 'function'
+  #TODO (randy): instead of iterating over all methods; iterate only over the methods defined in obj (ignoring super methods) by setting up a prototype chain for SyncMethods and FutureMethods
+  for key of obj
     do (key) ->
+      try
+        return unless typeof obj[key] == 'function' # getter methods may throw an exception in some contexts
+      catch e
+        return
+
       FutureMethods::[key] = (args...) ->
         #relookup the method every time to pick up reassignments of key on obj or an instance
         fn = @that[key]
