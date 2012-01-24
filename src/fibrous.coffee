@@ -12,7 +12,7 @@ module.exports = fibrous = (f) ->
   asyncFn
 
 
-fibrous.wrap = (obj) ->
+fibrous.wrap = (obj, options = {}) ->
   return obj if obj.__fibrouswrapped__
 
   throw new Error("the object to wrap already has a .sync attribute [#{obj.sync}]") if obj.sync?
@@ -22,25 +22,40 @@ fibrous.wrap = (obj) ->
     throw new Error("the object to wrap already has a .future attribute [#{obj.future}]")
 
   obj.__fibrouswrapped__ = true
-  obj.future ?= {}
-  obj.sync = {}
+
+  class FutureMethods
+    constructor: (@that) ->
+
+  class SyncMethods
+    constructor: (@that) ->
 
   for key, fn of obj when typeof fn == 'function'
     do (key) ->
-      obj.future[key] = (args...) ->
-        #relookup the method every time to pick up reassignments of key on obj
-        fn = obj[key]
+      FutureMethods::[key] = (args...) ->
+        #relookup the method every time to pick up reassignments of key on obj or an instance
+        fn = @that[key]
 
         #don't create unnecessary fibers and futures
-        return fn.__fibrousFutureFn__.apply(obj, args) if fn.__fibrousFutureFn__
+        return fn.__fibrousFutureFn__.apply(@that, args) if fn.__fibrousFutureFn__
 
         future = new Future
         args.push(future.resolver())
-        fn.apply(obj, args)
+        fn.apply(@that, args)
         future
 
-      obj.sync[key] = (args...) ->
-        obj.future[key](args...).wait()
+      SyncMethods::[key] = (args...) ->
+        @that.future[key](args...).wait()
+
+  Object.defineProperty obj, 'future',
+    get: ->
+      @__fibrousfuture__ ?= new FutureMethods(@)
+
+  Object.defineProperty obj, 'sync',
+    get: ->
+      @__fibroussync__ ?= new SyncMethods(@)
+
+  fibrous.wrap(obj.prototype) if (options.prototype and obj.prototype)
+
   obj
 
 

@@ -4,7 +4,6 @@ Future = require 'fibers/future'
 
 fs = fibrous.require('fs')
 
-
 describe 'fibrous', ->
 
   asyncObj = null
@@ -50,12 +49,34 @@ describe 'fibrous', ->
       expect(obj).toBe originalObj
       expect(returned).toBe originalObj
 
-    it "can wrap a function", ->
-      obj = ->
-      obj.method = ->
+    itFiber "can wrap a function", ->
+      func = ->
 
-      fibrous.wrap(obj)
-      expect(obj.future.method).toBeDefined()
+      func.value = 5
+      func.add = (i, cb) ->
+        process.nextTick =>
+          cb(null, i + @value)
+
+      fibrous.wrap(func)
+      expect(func.future.add).toBeDefined()
+      result = func.sync.add(4)
+      expect(result).toEqual 9
+
+    itFiber "adds an instance which overrides the prototype future method when wrapping a function", ->
+      #we don't want to modify the future prototype instance for all wrapped functions
+      obj1 = ->
+      obj1.method1 = ->
+
+      obj2 = ->
+      obj2.method2 = ->
+
+      fibrous.wrap(obj1)
+      fibrous.wrap(obj2)
+      expect(typeof obj1.future.method1).toBe 'function'
+      expect(typeof obj1.future.method2).toBe 'undefined'
+
+      expect(typeof obj2.future.method1).toBe 'undefined'
+      expect(typeof obj2.future.method2).toBe 'function'
 
     it "doesn't rewrap objects", ->
       originalFuture = asyncObj.future
@@ -77,6 +98,23 @@ describe 'fibrous', ->
         jasmine.getEnv().currentSpec.fail('should not have gotten here')
       catch e
         expect(e.message).toEqual 'the object to wrap already has a .future attribute [2020]'
+
+    itFiber 'can wrap a prototype, handling this, etc', ->
+      InstanceCls = (@value) ->
+      InstanceCls.prototype =
+        value: 1
+        add: (input, cb) ->
+          process.nextTick =>
+            cb(null, input + @value)
+
+      fibrous.wrap(InstanceCls, prototype: true)
+      instance = new InstanceCls(2)
+
+      expect(instance.future).toBe instance.future # get the same object on subsequent calls
+      expect(instance.sync).toBe instance.sync
+
+      result = instance.sync.add(4)
+      expect(result).toEqual 6
 
   describe 'require', ->
     itFiber 'works with built in modules', ->
