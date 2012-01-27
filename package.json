@@ -16,7 +16,7 @@
 , "dependencies"    : { "fibers" : "0.6.x"
                       }
 , "devDependencies" : { "jasmine-node" : "1.0.x"
-                      , "coffee-script" : "1.1.x"
+                      , "coffee-script" : "1.2.x"
                       }
 , "main"            : "lib/fibrous"
 , "engine" : { "node" : ">=0.6"
