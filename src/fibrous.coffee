@@ -1,74 +1,90 @@
 require 'fibers'
 Future = require 'fibers/future'
 
+#We replace Future's version of Function.prototype.future with our own, but use theirs later.
+functionWithFiberReturningFuture = Function::future
+
 module.exports = fibrous = (f) ->
-  futureFn = f.future() # handles all the heavy lifting of inheriting an existing fiber when appropriate
+  fiberFn = functionWithFiberReturningFuture.call(f) # handles all the heavy lifting of inheriting an existing fiber when appropriate
   asyncFn = (args...) ->
     callback = args.pop()
     throw new Error("Fibrous method expects a callback") unless callback instanceof Function
-    future = futureFn.apply(@, args)
+    future = fiberFn.apply(@, args)
     future.resolve callback
-  asyncFn.__fibrousFutureFn__ = futureFn
+  asyncFn.__fibrousFutureFn__ = fiberFn
   asyncFn
 
 
-fibrous.wrap = (obj, options = {}) ->
-  return obj if obj.__fibrouswrapped__
+futureize = (asyncFn) ->
+  (args...) ->
+    fnThis = @ is asyncFn and global or @
 
-  throw new Error("the object to wrap already has a .sync attribute [#{obj.sync}]") if obj.sync?
+    #don't create unnecessary fibers and futures
+    return asyncFn.__fibrousFutureFn__.apply(fnThis, args) if asyncFn.__fibrousFutureFn__
 
-  # When wrapping functions, we just attach our methods ro node-fibers Function prototype future method.
-  if obj.future? and obj.future != Function.prototype.future
-    throw new Error("the object to wrap already has a .future attribute [#{obj.future}]")
+    future = new Future
+    args.push(future.resolver())
+    asyncFn.apply(fnThis, args)
+    future
 
-  obj.__fibrouswrapped__ = true
+synchronize = (asyncFn) ->
+  (args...) ->
+    asyncFn.future.apply(@, args).wait()
 
-  class FutureMethods
-    constructor: (@that) ->
-
-  class SyncMethods
-    constructor: (@that) ->
-
-  #TODO (randy): instead of iterating over all methods; iterate only over the methods defined in obj (ignoring super methods) by setting up a prototype chain for SyncMethods and FutureMethods
-  for key of obj
+proxyAll = (src, target, proxyFn) ->
+  for key in Object.keys(src) # Gives back the keys on this object, not on prototypes
     do (key) ->
       try
-        return unless typeof obj[key] == 'function' # getter methods may throw an exception in some contexts
+        return if typeof src[key] isnt 'function' # getter methods may throw an exception in some contexts
       catch e
         return
 
-      FutureMethods::[key] = (args...) ->
+      target[key] = proxyFn(key)
+
+  target
+
+buildFuture = (that) ->
+  result =
+    if typeof(that) is 'function'
+      futureize(that)
+    else
+      Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that).future or null)
+
+  result.that = that
+
+  proxyAll that, result, (key) ->
+    (args...) ->
         #relookup the method every time to pick up reassignments of key on obj or an instance
-        fn = @that[key]
+        @that[key].future.apply(@that, args)
 
-        #don't create unnecessary fibers and futures
-        return fn.__fibrousFutureFn__.apply(@that, args) if fn.__fibrousFutureFn__
+buildSync = (that) ->
+  result =
+    if typeof(that) is 'function'
+      synchronize(that)
+    else
+      Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that).sync or null)
 
-        future = new Future
-        args.push(future.resolver())
-        fn.apply(@that, args)
-        future
+  result.that = that
 
-      SyncMethods::[key] = (args...) ->
-        @that.future[key](args...).wait()
+  proxyAll that, result, (key) ->
+    (args...) ->
+        #relookup the method every time to pick up reassignments of key on obj or an instance
+        @that[key].sync.apply(@that, args)
 
-  Object.defineProperty obj, 'future',
+
+defineMemoizedPerInstanceProperty = (target, propertyName, factory) ->
+  cacheKey = "__fibrous#{propertyName}__"
+  Object.defineProperty target, propertyName,
+    enumerable: false
     get: ->
-      @__fibrousfuture__ ?= new FutureMethods(@)
-
-  Object.defineProperty obj, 'sync',
-    get: ->
-      @__fibroussync__ ?= new SyncMethods(@)
-
-  fibrous.wrap(obj.prototype) if (options.prototype and obj.prototype)
-
-  obj
+      unless @hasOwnProperty(cacheKey) and @[cacheKey]
+        Object.defineProperty @, cacheKey, value: factory(@), enumerable: false # ensure the cached version is not enumerable
+      @[cacheKey]
 
 
-fibrous.require = (modName) ->
-  result = require modName
-  fibrous.wrap result
-  result
+for base in [Object::, Function::]
+  defineMemoizedPerInstanceProperty(base, 'future', buildFuture)
+  defineMemoizedPerInstanceProperty(base, 'sync', buildSync)
 
 
 fibrous.wait = (futures...) ->

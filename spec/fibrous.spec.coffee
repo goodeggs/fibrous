@@ -2,143 +2,43 @@ require './support/spec_helper'
 fibrous = require '../lib/fibrous'
 Future = require 'fibers/future'
 
-fs = fibrous.require('fs')
-
 describe 'fibrous', ->
 
   asyncObj = null
 
-  beforeEach ->
-    asyncObj = fibrous.wrap
-      value: 3
+  describe 'fibrous the function', ->
+    beforeEach ->
+      asyncObj =
+        value: 3
 
-      addValue: (input, cb) ->
-        process.nextTick =>
-          cb(null, input + @value)
-
-      addValueViaThis: (input, cb) ->
-        @addValue input, cb
-        
-      fibrousNoAdditionalFutures: fibrous () ->
-        1
-
-      fibrousAdd: fibrous (input) ->
-        asyncObj.sync.addValue(input)
-
-      fibrousAddViaThis: fibrous (input) ->
-        future = new Future()
-        @addValue(input, future.resolver())
-        future.wait()
-
-      fibrousSyncError: fibrous (input) ->
-        throw new Error('immediate error')
-
-      fibrousAsyncError: fibrous (input) ->
-        result = asyncObj.sync.addValue(input)
-        throw new Error('async error')
-
-      doInFibrous: fibrous (toDoFn) ->
-        toDoFn()
-
-  describe 'wrap', ->
-    it "wraps objects in place", ->
-      obj = {fn: ->}
-      originalObj = obj
-      returned = fibrous.wrap(obj)
-
-      expect(obj).toBe originalObj
-      expect(returned).toBe originalObj
-
-    itFiber "can wrap a function", ->
-      func = ->
-
-      func.value = 5
-      func.add = (i, cb) ->
-        process.nextTick =>
-          cb(null, i + @value)
-
-      fibrous.wrap(func)
-      expect(func.future.add).toBeDefined()
-      result = func.sync.add(4)
-      expect(result).toEqual 9
-
-    itFiber "adds an instance which overrides the prototype future method when wrapping a function", ->
-      #we don't want to modify the future prototype instance for all wrapped functions
-      obj1 = ->
-      obj1.method1 = ->
-
-      obj2 = ->
-      obj2.method2 = ->
-
-      fibrous.wrap(obj1)
-      fibrous.wrap(obj2)
-      expect(typeof obj1.future.method1).toBe 'function'
-      expect(typeof obj1.future.method2).toBe 'undefined'
-
-      expect(typeof obj2.future.method1).toBe 'undefined'
-      expect(typeof obj2.future.method2).toBe 'function'
-
-    it "doesn't rewrap objects", ->
-      originalFuture = asyncObj.future
-      fibrous.wrap(asyncObj)
-      expect(asyncObj.future).toBe originalFuture
-
-    it 'will not wrap objects which already have sync attributes', ->
-      obj = {sync: ->}
-      try
-        fibrous.wrap(obj)
-        jasmine.getEnv().currentSpec.fail('should not have gotten here')
-      catch e
-        expect(e.message).toEqual 'the object to wrap already has a .sync attribute [function () {}]'
-
-    it 'will not wrap objects which already have future attributes', ->
-      obj = {future: 2020}
-      try
-        fibrous.wrap(obj)
-        jasmine.getEnv().currentSpec.fail('should not have gotten here')
-      catch e
-        expect(e.message).toEqual 'the object to wrap already has a .future attribute [2020]'
-
-    it 'can handle getters which throw exceptions (eg on prototypes)', ->
-      # mongoose defines some getters in this way
-      obj = {}
-      obj.__defineGetter__ 'something', ->
-        throw new Error('this getter does not work in this context')
-
-      fibrous.wrap(obj)
-      # we should not get an error
-
-    itFiber 'can wrap a prototype, handling this, inheritance, etc', ->
-      class SuperCls
-        value: 1
-        supermethod: (input, cb) ->
-          process.nextTick =>
-            cb(null, input * @value)
-
-      class InstanceCls extends SuperCls
-        constructor: (@value) ->
-        value: 2
-        add: (input, cb) ->
+        addValue: (input, cb) ->
           process.nextTick =>
             cb(null, input + @value)
 
-      fibrous.wrap(InstanceCls, prototype: true)
-      instance = new InstanceCls(2)
+        addValueViaThis: (input, cb) ->
+          @addValue input, cb
 
-      expect(instance.future).toBe instance.future # get the same object on subsequent calls
-      expect(instance.sync).toBe instance.sync
+        fibrousNoAdditionalFutures: fibrous () ->
+          1
 
-      result = instance.sync.add(4)
-      expect(result).toEqual 6
+        fibrousAdd: fibrous (input) ->
+          asyncObj.sync.addValue(input)
 
-      expect(instance.sync.supermethod(5)).toEqual 10
+        fibrousAddViaThis: fibrous (input) ->
+          future = new Future()
+          @addValue(input, future.resolver())
+          future.wait()
 
-  describe 'require', ->
-    itFiber 'works with built in modules', ->
-      contents = fs.sync.readFile('spec/fixtures/testfile.txt', 'UTF8')
-      expect(contents).toEqual 'something exciting\n'
+        fibrousSyncError: fibrous (input) ->
+          throw new Error('immediate error')
 
-  describe 'fibrous', ->
+        fibrousAsyncError: fibrous (input) ->
+          result = asyncObj.sync.addValue(input)
+          throw new Error('async error')
+
+        doInFibrous: fibrous (toDoFn) ->
+          toDoFn()
+
     it 'creates an async method which runs in a fiber', (done) ->
       asyncObj.fibrousAdd 10, (err, result) ->
         expect(result).toEqual 13
@@ -183,50 +83,12 @@ describe 'fibrous', ->
         fiber = Fiber.current
         asyncObj.sync.doInFibrous ->
           expect(Fiber.current).toBe fiber
-          
+
       itFiber 'avoids creating an unnecessary additional Future', ->
         spyOn(Future.prototype, 'return').andCallThrough()
         result = asyncObj.sync.fibrousNoAdditionalFutures()
         expect(result).toEqual 1
         expect(Future.prototype['return'].callCount).toEqual 1
-
-  describe 'future', ->
-
-    it 'returns a future', (done) ->
-      future = asyncObj.future.addValue(2)
-      future.resolve (err, result) ->
-        expect(result).toEqual 5
-        done()
-
-    itFiber 'keeps this as the original object', ->
-      asyncObj.value = 5
-      result = asyncObj.future.addValue(2).wait()
-      expect(result).toEqual 7
-
-    itFiber 'keeps this as the original object for methods', ->
-      result = asyncObj.future.addValueViaThis(2).wait()
-      expect(result).toEqual 5
-
-    itFiber 'picks up redefinitions of methods', ->
-      asyncObj.addValue = (input, cb) ->
-        process.nextTick ->
-          cb(null, -1)
-
-      result = asyncObj.future.addValue(5).wait()
-      expect(result).toEqual(-1)
-
-  describe 'sync', ->
-
-    itFiber 'gives sync version of async methods', ->
-      result = asyncObj.sync.addValue(2)
-      expect(result).toEqual 5
-
-    it 'contains methods which only work within a fiber', ->
-      try
-        asyncObj.sync.addValue(2)
-        jasmine.getEnv().currentSpec.fail('expected the sync version of the method to throw')
-      catch e
-        expect(e.message).toEqual "Can't wait without a fiber"
 
   describe 'missing or misplaced callbacks seem to work for fibrous methods', ->
 
@@ -269,3 +131,154 @@ describe 'fibrous', ->
       fibrous.middleware {}, {}, () ->
         expect(Fiber.current).toBeTruthy()
         done()
+
+  describe 'inheritance', ->
+
+    class A
+      name: 'instanceA'
+      constructor: (name) -> @name = name if name?
+      method1: (arg, cb) -> process.nextTick => cb null, "#{@name}.method1(#{arg})"
+
+    A.static1 = (arg, cb) -> process.nextTick => cb null, "#{@name}.static1(#{arg})"
+
+    class B extends A
+      name: 'instanceB'
+      method2: (arg, cb) -> process.nextTick => cb null, "#{@name}.method2(#{arg})"
+
+    B.static2 = (arg, cb) -> process.nextTick => cb null, "#{@name}.static2(#{arg})"
+
+    a = null
+    b = null
+    aDog = null
+    bCat = null
+
+    beforeEach ->
+      a = new A()
+      a.method3 = (arg, cb) -> process.nextTick => cb null, "#{@name}.method3(#{arg})"
+      b = new B()
+
+      aDog = new A('dog')
+      bCat = new B('cat')
+
+    itFiber 'supports static methods', ->
+      expect(A.future.static1(5).wait()).toEqual 'A.static1(5)'
+      expect(B.future.static2(10).wait()).toEqual 'B.static2(10)'
+
+      expect(A.sync.static1(5)).toEqual 'A.static1(5)'
+      expect(B.sync.static2(10)).toEqual 'B.static2(10)'
+
+    itFiber 'only uses a prototype chain, containing only its own methods', ->
+      expect(Object.keys(a.future)).toEqual ['that',  'method3']
+
+      expect(Object.keys(a.sync)).toEqual ['that',  'method3']
+
+    it 'caches the results', ->
+      expect(b.future).toBe b.future
+      expect(b.sync).toBe b.sync
+      expect(Object.getPrototypeOf(b.future)).toBe B.prototype.future
+
+    itFiber 'does not add enumerable properties to the instance', ->
+      #invoke the getters to ensure the properties are created
+      expect(a.future).not.toBeNull()
+      expect(a.sync).not.toBeNull()
+      expect(a.__fibrousfuture__).not.toBeNull()
+      expect(a.__fibroussync__).not.toBeNull()
+
+      # enumerable properties defined on a
+      expect(Object.keys(a)).toEqual ['method3']
+      # all enumerable properties
+      keys = (key for key of a)
+      expect(keys).toEqual ['method3', 'name', 'method1']
+
+      expect(b.future).not.toBeNull()
+      expect(b.sync).not.toBeNull()
+      expect(b.__fibrousfuture__).not.toBeNull()
+      expect(b.__fibroussync__).not.toBeNull()
+
+      # enumerable properties defined on a
+      expect(Object.keys(b)).toEqual []
+      # all enumerable properties
+      keys = (key for key of b)
+      expect(keys).toEqual ['constructor', 'name', 'method2', 'method1']
+
+    it 'can handle getters which throw exceptions (eg on prototypes)', ->
+      # mongoose defines some getters in this way
+      obj = {}
+      obj.__defineGetter__ 'something', ->
+        throw new Error('this getter does not work in this context')
+
+
+      expect(obj.future).not.toBeNull()
+      # we should not get an error
+
+    itFiber 'does not add enumerable properties to the Object and Function prototype', ->
+      expect(Object.keys(Object::)).toEqual []
+      expect(Object.keys(Function::)).toEqual []
+
+    #TODO: call static1 with no args - what happens....
+  
+    itFiber 'supports instance methods', ->
+      expect(a.future.method3(11).wait()).toEqual 'instanceA.method3(11)'
+      expect(a.future.method1(6).wait()).toEqual 'instanceA.method1(6)'
+      expect(aDog.future.method1(7).wait()).toEqual 'dog.method1(7)'
+
+      expect(a.sync.method3(11)).toEqual 'instanceA.method3(11)'
+      expect(a.sync.method1(6)).toEqual 'instanceA.method1(6)'
+      expect(aDog.sync.method1(7)).toEqual 'dog.method1(7)'
+
+    itFiber 'supports inheritance', ->
+      expect(b.future.method1(4).wait()).toEqual 'instanceB.method1(4)'
+      expect(b.future.method2(6).wait()).toEqual 'instanceB.method2(6)'
+      expect(bCat.future.method1(3).wait()).toEqual 'cat.method1(3)'
+      expect(bCat.future.method2(5).wait()).toEqual 'cat.method2(5)'
+
+      expect(b.sync.method1(4)).toEqual 'instanceB.method1(4)'
+      expect(b.sync.method2(6)).toEqual 'instanceB.method2(6)'
+      expect(bCat.sync.method1(3)).toEqual 'cat.method1(3)'
+      expect(bCat.sync.method2(5)).toEqual 'cat.method2(5)'
+
+    describe 'sync', ->
+      it 'contains methods which only work within a fiber', ->
+        try
+          b.sync.method1(4)
+          jasmine.getEnv().currentSpec.fail('expected the sync version of the method to throw')
+        catch e
+          expect(e.message).toEqual "Can't wait without a fiber"
+
+    describe 'functions', ->
+      f = null
+
+      beforeEach ->
+        f = (cb) ->
+          process.nextTick =>
+            cb(null, "#{@}.f()")
+
+      itFiber 'supports them', ->
+        expect(f.future().wait()).toEqual '[object global].f()'
+        expect(f.future.call(10).wait()).toEqual '10.f()'
+
+        expect(f.sync()).toEqual '[object global].f()'
+        expect(f.sync.call(11)).toEqual '11.f()'
+
+      itFiber 'allows functions to be used as prototypes(not a common use case)', ->
+        f.staticF = (cb) ->
+          process.nextTick =>
+            cb(null, "#{@}.staticF()")
+        f.toString = -> 'f'
+
+        obj = Object.create(f)
+        obj.toString = -> 'obj'
+
+        expect(f.future.staticF().wait()).toEqual 'f.staticF()'
+        expect(obj.future.staticF().wait()).toEqual 'obj.staticF()'
+
+        expect(f.sync.staticF()).toEqual 'f.staticF()'
+        expect(obj.sync.staticF()).toEqual 'obj.staticF()'
+
+      itFiber 'avoids creating an unnecessary additional Future when operating on a fibrous function', ->
+        f = fibrous -> 'result'
+
+        spyOn(Future.prototype, 'return').andCallThrough()
+        expect(f.future().wait()).toEqual 'result'
+
+        expect(Future.prototype['return'].callCount).toEqual 1

@@ -1,4 +1,4 @@
-require 'fibers'
+fibrous = require('./fibrous')
 
 module.exports = fiber_spec_helper =
   addFiberVariants: (context) ->
@@ -13,8 +13,7 @@ module.exports = fiber_spec_helper =
           original args..., =>
             done = false
             runs ->
-              future = spec.future().apply(@)
-              future.resolve (err, result) ->
+              fibrous(spec).call @, (err, result) ->
                 done = true
                 jasmine.getEnv().currentSpec.fail(err) if err?
             waitsFor ->
