@@ -237,6 +237,17 @@ describe 'fibrous', ->
       expect(bCat.sync.method1(3)).toEqual 'cat.method1(3)'
       expect(bCat.sync.method2(5)).toEqual 'cat.method2(5)'
 
+    describe 'future', ->
+      itFiber 'return synchronous errors via the future', ->
+        f = (cb) -> throw new Error('BOOM')
+        future = f.future()
+
+        try
+          future.wait()
+          jasmine.getEnv().currentSpec.fail('expected the wait to throw')
+        catch e
+          expect(e.message).toEqual 'BOOM'
+
     describe 'sync', ->
       it 'contains methods which only work within a fiber', ->
         try

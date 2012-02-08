@@ -24,7 +24,11 @@ futureize = (asyncFn) ->
 
     future = new Future
     args.push(future.resolver())
-    asyncFn.apply(fnThis, args)
+    try
+      asyncFn.apply(fnThis, args)
+    catch e
+      # ensure synchronous errors are returned via the future
+      future.throw(e)
     future
 
 synchronize = (asyncFn) ->
