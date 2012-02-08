@@ -215,8 +215,6 @@ describe 'fibrous', ->
       expect(Object.keys(Object::)).toEqual []
       expect(Object.keys(Function::)).toEqual []
 
-    #TODO: call static1 with no args - what happens....
-  
     itFiber 'supports instance methods', ->
       expect(a.future.method3(11).wait()).toEqual 'instanceA.method3(11)'
       expect(a.future.method1(6).wait()).toEqual 'instanceA.method1(6)'
