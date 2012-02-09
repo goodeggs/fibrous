@@ -13,7 +13,9 @@ usage
   The basic assumption is that all services will be have a standard node style asynchronous api.
   The fibrous prefix method can used to write a method which runs in a fiber (either inheriting, or spawning
     it's own), but which still has the standard node style async external interface.
-  The wrap method introduces future and sync versions of all the methods in the wrapped object.
-  The require method will require a module and wrap it.
+  future and sync methods have been added to the Function prototype, allowing you to call the function in that style:
+    eg. func.future() or func.sync() (with this as the global object) OR func.future.call(someThis) (with this as someThis).
+  future and sync accessors have been added to the Object prototype (correctly, so that they are not enumerable) so that
+    you can call attached functions in that style while preserving this: eg. obj.future.func() or obj.sync.func()
   The wait method is a convenience passthrough to Fiber.wait which returns the results of all the futures.
   The specHelper.addFiberVariants method can be used to add variants of it, beforeEach, etc which run in a fiber
