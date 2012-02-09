@@ -235,6 +235,13 @@ describe 'fibrous', ->
       expect(bCat.sync.method1(3)).toEqual 'cat.method1(3)'
       expect(bCat.sync.method2(5)).toEqual 'cat.method2(5)'
 
+    it 'does not copy over overwritten Object.prototype methods (like toString) which can break some behaviors (eg. toStringing the sync Object)', ->
+      b.toString = -> 'alternate toString'
+      expect('toString' not in Object.keys(b.future)).toBeTruthy()
+      expect('toLocaleString' not in Object.keys(b.future)).toBeTruthy()
+      expect('toString' not in Object.keys(b.sync)).toBeTruthy()
+      expect('toLocaleString' not in Object.keys(b.sync)).toBeTruthy()
+
     describe 'future', ->
       itFiber 'return synchronous errors via the future', ->
         f = (cb) -> throw new Error('BOOM')
@@ -269,7 +276,7 @@ describe 'fibrous', ->
         expect(f.sync()).toEqual '[object global].f()'
         expect(f.sync.call(11)).toEqual '11.f()'
 
-      itFiber 'allows functions to be used as prototypes(not a common use case)', ->
+      itFiber 'allows functions to be used as prototypes', ->
         f.staticF = (cb) ->
           process.nextTick =>
             cb(null, "#{@}.staticF()")
@@ -283,6 +290,24 @@ describe 'fibrous', ->
 
         expect(f.sync.staticF()).toEqual 'f.staticF()'
         expect(obj.sync.staticF()).toEqual 'obj.staticF()'
+
+      itFiber 'allows functions to be used as prototypes of other functions', ->
+        f.staticF = (cb) ->
+          process.nextTick =>
+            cb(null, "#{@}.staticF()")
+        f.toString = ->
+          'f'
+
+        otherF = ->
+        otherF.__proto__ = f
+        otherF.toString = ->
+          'otherF'
+
+        expect(f.future.staticF().wait()).toEqual 'f.staticF()'
+        expect(otherF.future.staticF().wait()).toEqual 'otherF.staticF()'
+
+        expect(f.sync.staticF()).toEqual 'f.staticF()'
+        expect(otherF.sync.staticF()).toEqual 'otherF.staticF()'
 
       itFiber 'avoids creating an unnecessary additional Future when operating on a fibrous function', ->
         f = fibrous -> 'result'

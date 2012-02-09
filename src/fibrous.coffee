@@ -35,11 +35,15 @@ synchronize = (asyncFn) ->
   (args...) ->
     asyncFn.future.apply(@, args).wait()
 
+objectPrototypeProps = {}
+objectPrototypeProps[key] = true for key in Object.getOwnPropertyNames(Object::)
+
 proxyAll = (src, target, proxyFn) ->
-  for key in Object.keys(src) # Gives back the keys on this object, not on prototypes
+  for key in Object.keys(src) # Gives back the keys on this object, not on prototypes; ignore any rewrites of toString which can cause problems.
     do (key) ->
       try
         return if typeof src[key] isnt 'function' # getter methods may throw an exception in some contexts
+        return if objectPrototypeProps[key]?
       catch e
         return
 
@@ -47,33 +51,22 @@ proxyAll = (src, target, proxyFn) ->
 
   target
 
-buildFuture = (that) ->
-  result =
-    if typeof(that) is 'function'
-      futureize(that)
-    else
-      Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that).future or null)
+proxyBuilder = (futureOrSync) ->
+  (that) ->
+    result =
+      if typeof(that) is 'function'
+        func = (futureOrSync is 'future' and futureize or synchronize)(that)
+        func.__proto__ = Object.getPrototypeOf(that)[futureOrSync] if Object.getPrototypeOf(that) isnt Function.prototype
+        func
+      else
+        Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that)[futureOrSync] or null)
 
-  result.that = that
+    result.that = that
 
-  proxyAll that, result, (key) ->
-    (args...) ->
-        #relookup the method every time to pick up reassignments of key on obj or an instance
-        @that[key].future.apply(@that, args)
-
-buildSync = (that) ->
-  result =
-    if typeof(that) is 'function'
-      synchronize(that)
-    else
-      Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that).sync or null)
-
-  result.that = that
-
-  proxyAll that, result, (key) ->
-    (args...) ->
-        #relookup the method every time to pick up reassignments of key on obj or an instance
-        @that[key].sync.apply(@that, args)
+    proxyAll that, result, (key) ->
+      (args...) ->
+          #relookup the method every time to pick up reassignments of key on obj or an instance
+          @that[key][futureOrSync].apply(@that, args)
 
 
 defineMemoizedPerInstanceProperty = (target, propertyName, factory) ->
@@ -87,8 +80,8 @@ defineMemoizedPerInstanceProperty = (target, propertyName, factory) ->
 
 
 for base in [Object::, Function::]
-  defineMemoizedPerInstanceProperty(base, 'future', buildFuture)
-  defineMemoizedPerInstanceProperty(base, 'sync', buildSync)
+  defineMemoizedPerInstanceProperty(base, 'future', proxyBuilder('future'))
+  defineMemoizedPerInstanceProperty(base, 'sync', proxyBuilder('sync'))
 
 
 fibrous.wait = (futures...) ->
