@@ -4,14 +4,15 @@ Future = require 'fibers/future'
 #We replace Future's version of Function.prototype.future with our own, but use theirs later.
 functionWithFiberReturningFuture = Function::future
 
-module.exports = fibrous = (f) ->
-  fiberFn = functionWithFiberReturningFuture.call(f) # handles all the heavy lifting of inheriting an existing fiber when appropriate
+module.exports = fibrous = (fn) ->
+  futureFn = functionWithFiberReturningFuture.call(fn) # handles all the heavy lifting of inheriting an existing fiber when appropriate
   asyncFn = (args...) ->
     callback = args.pop()
     throw new Error("Fibrous method expects a callback") unless callback instanceof Function
-    future = fiberFn.apply(@, args)
+    future = futureFn.apply(@, args)
     future.resolve callback
-  asyncFn.__fibrousFutureFn__ = fiberFn
+  Object.defineProperty asyncFn, '__fibrousFn__', value: fn, enumerable: false
+  Object.defineProperty asyncFn, '__fibrousFutureFn__', value: futureFn, enumerable: false
   asyncFn
 
 
@@ -33,6 +34,9 @@ futureize = (asyncFn) ->
 
 synchronize = (asyncFn) ->
   (args...) ->
+    #When calling a fibrous function synchronously, we don't need to create a future
+    return asyncFn.__fibrousFn__.apply(@ is asyncFn and global or @, args) if asyncFn.__fibrousFn__
+
     asyncFn.future.apply(@, args).wait()
 
 objectPrototypeProps = {}

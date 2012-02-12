@@ -59,6 +59,10 @@ describe 'fibrous', ->
         expect(err.message).toEqual 'async error'
         done()
 
+    it 'stores non enumerable references to other versions of the function', ->
+      expect('__fibrousFn__' not in Object.keys(asyncObj.fibrousAdd)).toBeTruthy()
+      expect('__fibrousFutureFn__' not in Object.keys(asyncObj.fibrousAdd)).toBeTruthy()
+
     describe 'from within a fiber', ->
 
       itFiber 'works in a fiber', ->
@@ -84,11 +88,17 @@ describe 'fibrous', ->
         asyncObj.sync.doInFibrous ->
           expect(Fiber.current).toBe fiber
 
-      itFiber 'avoids creating an unnecessary additional Future', ->
+      itFiber 'only creates one future for the future version', ->
+        spyOn(Future.prototype, 'return').andCallThrough()
+        result = asyncObj.future.fibrousNoAdditionalFutures().wait()
+        expect(result).toEqual 1
+        expect(Future.prototype['return'].callCount).toEqual 1
+
+      itFiber 'does not create any futures for the sync version', ->
         spyOn(Future.prototype, 'return').andCallThrough()
         result = asyncObj.sync.fibrousNoAdditionalFutures()
         expect(result).toEqual 1
-        expect(Future.prototype['return'].callCount).toEqual 1
+        expect(Future.prototype['return'].callCount).toEqual 0
 
   describe 'missing or misplaced callbacks seem to work for fibrous methods', ->
 
