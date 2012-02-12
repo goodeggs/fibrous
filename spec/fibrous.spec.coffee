@@ -70,18 +70,14 @@ describe 'fibrous', ->
         expect(result).toEqual 4
 
       itFiber 'immediate errors work in a fiber', ->
-        try
+        expect( ->
           asyncObj.sync.fibrousSyncError(1)
-          jasmine.getEnv().currentSpec.fail('should not get here')
-        catch e
-          expect(e.message).toEqual 'immediate error'
+        ).toThrow(new Error('immediate error'))
 
       itFiber 'async errors work in a fiber', ->
-        try
+        expect(->
           asyncObj.sync.fibrousAsyncError(1)
-          jasmine.getEnv().currentSpec.fail('should not get here')
-        catch e
-          expect(e.message).toEqual 'async error'
+        ).toThrow(new Error('async error'))
 
       itFiber 'inherits the fiber if it can to prevent unnecessary fiber spawning', ->
         fiber = Fiber.current
@@ -257,19 +253,15 @@ describe 'fibrous', ->
         f = (cb) -> throw new Error('BOOM')
         future = f.future()
 
-        try
+        expect(->
           future.wait()
-          jasmine.getEnv().currentSpec.fail('expected the wait to throw')
-        catch e
-          expect(e.message).toEqual 'BOOM'
+        ).toThrow(new Error('BOOM'))
 
     describe 'sync', ->
       it 'contains methods which only work within a fiber', ->
-        try
+        expect(->
           b.sync.method1(4)
-          jasmine.getEnv().currentSpec.fail('expected the sync version of the method to throw')
-        catch e
-          expect(e.message).toEqual "Can't wait without a fiber"
+        ).toThrow(new Error "Can't wait without a fiber")
 
     describe 'functions', ->
       f = null
