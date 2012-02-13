@@ -1,1 +1,1 @@
-require('../../lib/fiber_spec_helper')
+require('../../lib/jasmine_spec_helper')
