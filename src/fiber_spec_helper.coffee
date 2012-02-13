@@ -2,20 +2,41 @@ fibrous = require('./fibrous')
 
 module.exports = fiber_spec_helper =
   addFiberVariants: (context) ->
-    # Add 'itFiber', 'beforeEachFiber', 'afterEachFiber' to wrap each spec or callback in a Fiber
-    for jasmineFunction in [ "it", "xit", "beforeEach", "afterEach"]
+    originalRunner = jasmine.Runner.prototype.execute
+    jasmine.Runner.prototype.execute = (args...) ->
+      fibrous(originalRunner.bind(@, args...)) (err, result) ->
+        throw err if err?
+
+    # This is a bummer hack, and breaks the setTimeout semantics to sleep the Runner fiber (thus, the fiber does not
+    # continue during the duration); but is necessary because jasmine calls an occasional timeout to prevent event
+    # loop starvation - see jasmine.DEFAULT_UPDATE_INTERVAL.
+    # TODO(randy): try a different fiber per spec
+    jasmine.Env.prototype.setTimeout = (f, time) ->
+      asyncF = (cb) ->
+        global.setTimeout cb, time
+
+      asyncF.sync()
+      f()
+
+    for jasmineFunction in [ "it", "beforeEach", "afterEach"]
       do (jasmineFunction) ->
-        variant = jasmineFunction + 'Fiber'
-        return if context[variant]
         original = context[jasmineFunction]
-        context[variant] = (args...) ->
+        context[jasmineFunction] = (args...) ->
           spec = args.pop()
-          original args..., =>
-            done = false
-            runs ->
-              fibrous(spec).call @, (err, result) ->
-                done = true
-                jasmine.getEnv().currentSpec.fail(err) if err?
-            waitsFor ->
-              done == true
-            , "fiber to complete"
+
+          # non async specs
+          return original args..., spec if spec.length is 0
+
+          # Async specs with a done callback
+          original args..., ->
+            duration = 5000
+            asyncSpecFuture = spec.future()
+
+            timeout = setTimeout =>
+              msg = "spec timed out after #{duration} msec waiting for the asynchronous done callback to be called"
+              asyncSpecFuture.throw(new Error(msg)) unless asyncSpecFuture.isResolved()
+            , duration
+
+            # For async specs, pause the runner fiber until the spec completes
+            asyncSpecFuture.wait()
+            clearTimeout(timeout)

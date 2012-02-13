@@ -40,8 +40,11 @@ describe 'fibrous', ->
           toDoFn()
 
     it 'creates an async method which runs in a fiber', (done) ->
+      testRunnerFiber = Fiber.current
       asyncObj.fibrousAdd 10, (err, result) ->
         expect(result).toEqual 13
+        expect(Fiber.current).toBeTruthy()
+        expect(Fiber.current).not.toBe testRunnerFiber
         done()
 
     it 'properly handles this', (done) ->
@@ -65,32 +68,32 @@ describe 'fibrous', ->
 
     describe 'from within a fiber', ->
 
-      itFiber 'works in a fiber', ->
+      it 'works in a fiber', ->
         result = asyncObj.sync.fibrousAdd(1)
         expect(result).toEqual 4
 
-      itFiber 'immediate errors work in a fiber', ->
+      it 'immediate errors work in a fiber', ->
         expect( ->
           asyncObj.sync.fibrousSyncError(1)
         ).toThrow(new Error('immediate error'))
 
-      itFiber 'async errors work in a fiber', ->
+      it 'async errors work in a fiber', ->
         expect(->
           asyncObj.sync.fibrousAsyncError(1)
         ).toThrow(new Error('async error'))
 
-      itFiber 'inherits the fiber if it can to prevent unnecessary fiber spawning', ->
+      it 'inherits the fiber if it can to prevent unnecessary fiber spawning', ->
         fiber = Fiber.current
         asyncObj.sync.doInFibrous ->
           expect(Fiber.current).toBe fiber
 
-      itFiber 'only creates one future for the future version', ->
+      it 'only creates one future for the future version', ->
         spyOn(Future.prototype, 'return').andCallThrough()
         result = asyncObj.future.fibrousNoAdditionalFutures().wait()
         expect(result).toEqual 1
         expect(Future.prototype['return'].callCount).toEqual 1
 
-      itFiber 'does not create any futures for the sync version', ->
+      it 'does not create any futures for the sync version', ->
         spyOn(Future.prototype, 'return').andCallThrough()
         result = asyncObj.sync.fibrousNoAdditionalFutures()
         expect(result).toEqual 1
@@ -103,26 +106,26 @@ describe 'fibrous', ->
         expect(isNaN result).toBe true
         done()
 
-    itFiber 'is ok for a fibrous method in a fiber', ->
+    it 'is ok for a fibrous method in a fiber', ->
       result = asyncObj.sync.fibrousAdd()
       expect(isNaN result).toBe true
 
   describe 'wait', ->
 
-    itFiber 'returns an array of all the results of the futures', ->
+    it 'returns an array of all the results of the futures', ->
       future1 = asyncObj.future.addValue(2)
       future2 = asyncObj.future.addValue(3)
 
       results = fibrous.wait(future1, future2)
       expect(results).toEqual [5,6]
 
-    itFiber 'returns the result for a single argument', ->
+    it 'returns the result for a single argument', ->
       future = asyncObj.future.addValue(2)
 
       result = fibrous.wait(future)
       expect(result).toEqual 5
 
-    itFiber 'handles arrays of futures', ->
+    it 'handles arrays of futures', ->
       future1 = asyncObj.future.addValue(2)
       future2 = asyncObj.future.addValue(3)
       future3 = asyncObj.future.addValue(4)
@@ -133,10 +136,12 @@ describe 'fibrous', ->
   describe 'middleware', ->
 
     it 'runs in a fiber', (done) ->
-      expect(Fiber.current).toBeFalsy()
-      fibrous.middleware {}, {}, () ->
-        expect(Fiber.current).toBeTruthy()
-        done()
+      # process.nextTick it to get out of the test runner's fiber
+      process.nextTick ->
+        expect(Fiber.current).toBeFalsy()
+        fibrous.middleware {}, {}, () ->
+          expect(Fiber.current).toBeTruthy()
+          done()
 
   describe 'inheritance', ->
 
@@ -166,14 +171,14 @@ describe 'fibrous', ->
       aDog = new A('dog')
       bCat = new B('cat')
 
-    itFiber 'supports static methods', ->
+    it 'supports static methods', ->
       expect(A.future.static1(5).wait()).toEqual 'A.static1(5)'
       expect(B.future.static2(10).wait()).toEqual 'B.static2(10)'
 
       expect(A.sync.static1(5)).toEqual 'A.static1(5)'
       expect(B.sync.static2(10)).toEqual 'B.static2(10)'
 
-    itFiber 'only uses a prototype chain, containing only its own methods', ->
+    it 'only uses a prototype chain, containing only its own methods', ->
       expect(Object.keys(a.future)).toEqual ['that',  'method3']
 
       expect(Object.keys(a.sync)).toEqual ['that',  'method3']
@@ -183,7 +188,7 @@ describe 'fibrous', ->
       expect(b.sync).toBe b.sync
       expect(Object.getPrototypeOf(b.future)).toBe B.prototype.future
 
-    itFiber 'does not add enumerable properties to the instance', ->
+    it 'does not add enumerable properties to the instance', ->
       #invoke the getters to ensure the properties are created
       expect(a.future).not.toBeNull()
       expect(a.sync).not.toBeNull()
@@ -217,11 +222,11 @@ describe 'fibrous', ->
       expect(obj.future).not.toBeNull()
       # we should not get an error
 
-    itFiber 'does not add enumerable properties to the Object and Function prototype', ->
+    it 'does not add enumerable properties to the Object and Function prototype', ->
       expect(Object.keys(Object::)).toEqual []
       expect(Object.keys(Function::)).toEqual []
 
-    itFiber 'supports instance methods', ->
+    it 'supports instance methods', ->
       expect(a.future.method3(11).wait()).toEqual 'instanceA.method3(11)'
       expect(a.future.method1(6).wait()).toEqual 'instanceA.method1(6)'
       expect(aDog.future.method1(7).wait()).toEqual 'dog.method1(7)'
@@ -230,7 +235,7 @@ describe 'fibrous', ->
       expect(a.sync.method1(6)).toEqual 'instanceA.method1(6)'
       expect(aDog.sync.method1(7)).toEqual 'dog.method1(7)'
 
-    itFiber 'supports inheritance', ->
+    it 'supports inheritance', ->
       expect(b.future.method1(4).wait()).toEqual 'instanceB.method1(4)'
       expect(b.future.method2(6).wait()).toEqual 'instanceB.method2(6)'
       expect(bCat.future.method1(3).wait()).toEqual 'cat.method1(3)'
@@ -249,7 +254,7 @@ describe 'fibrous', ->
       expect('toLocaleString' not in Object.keys(b.sync)).toBeTruthy()
 
     describe 'future', ->
-      itFiber 'return synchronous errors via the future', ->
+      it 'return synchronous errors via the future', ->
         f = (cb) -> throw new Error('BOOM')
         future = f.future()
 
@@ -258,10 +263,13 @@ describe 'fibrous', ->
         ).toThrow(new Error('BOOM'))
 
     describe 'sync', ->
-      it 'contains methods which only work within a fiber', ->
-        expect(->
-          b.sync.method1(4)
-        ).toThrow(new Error "Can't wait without a fiber")
+      it 'contains methods which only work within a fiber', (done) ->
+        # nextTick it to get out of the test runner's fiber
+        process.nextTick ->
+          expect(->
+            b.sync.method1(4)
+          ).toThrow(new Error "Can't wait without a fiber")
+          done()
 
     describe 'functions', ->
       f = null
@@ -271,14 +279,14 @@ describe 'fibrous', ->
           process.nextTick =>
             cb(null, "#{@}.f()")
 
-      itFiber 'supports them', ->
+      it 'supports them', ->
         expect(f.future().wait()).toEqual '[object global].f()'
         expect(f.future.call(10).wait()).toEqual '10.f()'
 
         expect(f.sync()).toEqual '[object global].f()'
         expect(f.sync.call(11)).toEqual '11.f()'
 
-      itFiber 'allows functions to be used as prototypes', ->
+      it 'allows functions to be used as prototypes', ->
         f.staticF = (cb) ->
           process.nextTick =>
             cb(null, "#{@}.staticF()")
@@ -293,7 +301,7 @@ describe 'fibrous', ->
         expect(f.sync.staticF()).toEqual 'f.staticF()'
         expect(obj.sync.staticF()).toEqual 'obj.staticF()'
 
-      itFiber 'allows functions to be used as prototypes of other functions', ->
+      it 'allows functions to be used as prototypes of other functions', ->
         f.staticF = (cb) ->
           process.nextTick =>
             cb(null, "#{@}.staticF()")
@@ -311,7 +319,7 @@ describe 'fibrous', ->
         expect(f.sync.staticF()).toEqual 'f.staticF()'
         expect(otherF.sync.staticF()).toEqual 'otherF.staticF()'
 
-      itFiber 'avoids creating an unnecessary additional Future when operating on a fibrous function', ->
+      it 'avoids creating an unnecessary additional Future when operating on a fibrous function', ->
         f = fibrous -> 'result'
 
         spyOn(Future.prototype, 'return').andCallThrough()
