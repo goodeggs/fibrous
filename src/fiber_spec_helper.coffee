@@ -1,6 +1,7 @@
 fibrous = require('./fibrous')
 
 module.exports = fiber_spec_helper =
+  timeout: 1000
   addFiberVariants: () ->
     originalRunner = jasmine.Runner.prototype.execute
     jasmine.Runner.prototype.execute = (args...) ->
@@ -29,13 +30,12 @@ module.exports = fiber_spec_helper =
 
           # Async specs with a done callback
           original.call @, args..., ->
-            duration = 5000
             asyncSpecFuture = spec.future()
 
             timeout = setTimeout =>
-              msg = "spec timed out after #{duration} msec waiting for the asynchronous done callback to be called"
+              msg = "spec timed out after #{fiber_spec_helper.timeout} msec waiting for the asynchronous done callback to be called"
               asyncSpecFuture.throw(new Error(msg)) unless asyncSpecFuture.isResolved()
-            , duration
+            , fiber_spec_helper.timeout
 
             # For async specs, pause the runner fiber until the spec completes
             asyncSpecFuture.wait()
