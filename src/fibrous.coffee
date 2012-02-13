@@ -109,5 +109,3 @@ fibrous.middleware = (req, res, next) ->
         # We expect any errors which bubble up the fiber will be handled by the router
         console.error('Unexpected error bubble up to the top of the fiber:', e?.stack or e)
     .run()
-
-fibrous.specHelper = require('./fiber_spec_helper')

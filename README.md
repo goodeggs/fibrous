@@ -18,4 +18,4 @@ usage
   future and sync accessors have been added to the Object prototype (correctly, so that they are not enumerable) so that
     you can call attached functions in that style while preserving this: eg. obj.future.func() or obj.sync.func()
   The wait method is a convenience passthrough to Fiber.wait which returns the results of all the futures.
-  The specHelper.addFiberVariants method can be used to add variants of it, beforeEach, etc which run in a fiber
+  Requiring fibrous/lib/fiber_spec_helper to ensure each jasmine spec runs inside a fiber.
