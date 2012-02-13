@@ -1,1 +1,1 @@
-require('../../lib/fibrous').specHelper.addFiberVariants(global)
+require('../../lib/fibrous').specHelper.addFiberVariants()

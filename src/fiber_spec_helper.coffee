@@ -1,7 +1,7 @@
 fibrous = require('./fibrous')
 
 module.exports = fiber_spec_helper =
-  addFiberVariants: (context) ->
+  addFiberVariants: () ->
     originalRunner = jasmine.Runner.prototype.execute
     jasmine.Runner.prototype.execute = (args...) ->
       fibrous(originalRunner.bind(@, args...)) (err, result) ->
@@ -20,15 +20,15 @@ module.exports = fiber_spec_helper =
 
     for jasmineFunction in [ "it", "beforeEach", "afterEach"]
       do (jasmineFunction) ->
-        original = context[jasmineFunction]
-        context[jasmineFunction] = (args...) ->
+        original = jasmine.Env.prototype[jasmineFunction]
+        jasmine.Env.prototype[jasmineFunction] = (args...) ->
           spec = args.pop()
 
           # non async specs
-          return original args..., spec if spec.length is 0
+          return original.call @, args..., spec if spec.length is 0
 
           # Async specs with a done callback
-          original args..., ->
+          original.call @, args..., ->
             duration = 5000
             asyncSpecFuture = spec.future()
 
