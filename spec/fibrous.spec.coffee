@@ -136,12 +136,10 @@ describe 'fibrous', ->
   describe 'middleware', ->
 
     it 'runs in a fiber', (done) ->
-      # process.nextTick it to get out of the test runner's fiber
-      process.nextTick ->
-        expect(Fiber.current).toBeFalsy()
-        fibrous.middleware {}, {}, () ->
-          expect(Fiber.current).toBeTruthy()
-          done()
+      expect(Fiber.current).toBeFalsy()
+      fibrous.middleware {}, {}, () ->
+        expect(Fiber.current).toBeTruthy()
+        done()
 
   describe 'inheritance', ->
 
@@ -276,12 +274,10 @@ describe 'fibrous', ->
 
     describe 'sync', ->
       it 'contains methods which only work within a fiber', (done) ->
-        # nextTick it to get out of the test runner's fiber
-        process.nextTick ->
-          expect(->
-            b.sync.method1(4)
-          ).toThrow(new Error "Can't wait without a fiber")
-          done()
+        expect(->
+          b.sync.method1(4)
+        ).toThrow(new Error "Can't wait without a fiber")
+        done()
 
     describe 'functions', ->
       f = null

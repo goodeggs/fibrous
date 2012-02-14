@@ -1,39 +1,31 @@
 fibrous = require('./fibrous')
 
-originalRunner = jasmine.Runner.prototype.execute
-jasmine.Runner.prototype.execute = (args...) ->
-  fibrous(originalRunner.bind(@, args...)) (err, result) ->
-    throw err if err?
+class jasmine.AsyncBlock extends jasmine.Block
+  execute: (onComplete) ->
+    completed = false
+    complete = (err) =>
+      if completed
+        console.error "A completed async spec \"#{@spec.getFullName()}\" has completed again with", err?.stack or err
+      else
+        completed = true
+        clearTimeout(timeout)
+        @spec.fail(err) if err?
+        process.nextTick onComplete # next tick it to prevent the next block from running in the previous block's fiber
 
-# This is a bummer hack, and breaks the setTimeout semantics to sleep the Runner fiber (thus, the fiber does not
-# continue during the duration); but is necessary because jasmine calls an occasional timeout to prevent event
-# loop starvation - see jasmine.DEFAULT_UPDATE_INTERVAL.
-# TODO(randy): try a different fiber per spec
-jasmine.Env.prototype.setTimeout = (f, time) ->
-  asyncF = (cb) ->
-    global.setTimeout cb, time
+    timeout = setTimeout =>
+      complete(new Error("spec timed out after #{jasmine.DEFAULT_TIMEOUT_INTERVAL} msec"))
+    , jasmine.DEFAULT_TIMEOUT_INTERVAL
 
-  asyncF.sync()
-  f()
+    @func.call @spec, complete
 
 for jasmineFunction in [ "it", "beforeEach", "afterEach"]
   do (jasmineFunction) ->
     original = jasmine.Env.prototype[jasmineFunction]
     jasmine.Env.prototype[jasmineFunction] = (args...) ->
-      spec = args.pop()
+      func = args.pop()
 
-      # non async specs
-      return original.call @, args..., spec if spec.length is 0
-
-      # Async specs with a done callback
-      original.call @, args..., ->
-        asyncSpecFuture = spec.future()
-
-        timeout = setTimeout =>
-          msg = "spec timed out after #{jasmine.DEFAULT_TIMEOUT_INTERVAL} msec waiting for the asynchronous done callback to be called"
-          asyncSpecFuture.throw(new Error(msg)) unless asyncSpecFuture.isResolved()
-        , jasmine.DEFAULT_TIMEOUT_INTERVAL
-
-        # For async specs, pause the runner fiber until the spec completes
-        asyncSpecFuture.wait()
-        clearTimeout(timeout)
+      return original.call @, args..., ->
+        #Causes non async specs to run inside a fiber
+        asyncFunc = (func.length is 1) and func or fibrous(func)
+        asyncBlock = new jasmine.AsyncBlock(@env, asyncFunc, @)
+        @addToQueue(asyncBlock)
