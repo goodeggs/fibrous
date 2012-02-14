@@ -1,6 +1,6 @@
 {
   "name"            : "fibrous"
-, "version"         : "0.2.1"
+, "version"         : "0.2.2"
 , "description"     : "A library to help with fibers"
 , "homepage"        : "http://github.com/goodeggs/fibrous"
 , "repository"      : { "type" : "git"
