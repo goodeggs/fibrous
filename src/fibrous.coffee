@@ -45,11 +45,9 @@ objectPrototypeProps[key] = true for key in Object.getOwnPropertyNames(Object::)
 proxyAll = (src, target, proxyFn) ->
   for key in Object.keys(src) # Gives back the keys on this object, not on prototypes; ignore any rewrites of toString which can cause problems.
     do (key) ->
-      try
-        return if typeof src[key] isnt 'function' # getter methods may throw an exception in some contexts
-        return if objectPrototypeProps[key]?
-      catch e
-        return
+      return if objectPrototypeProps[key]
+      return if Object.getOwnPropertyDescriptor(src, key).get? # getter methods can have unintentional side effects when called in the wrong context
+      return unless typeof src[key] is 'function' # getter methods may throw an exception in some contexts
 
       target[key] = proxyFn(key)
 

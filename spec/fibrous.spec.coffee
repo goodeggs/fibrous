@@ -212,15 +212,27 @@ describe 'fibrous', ->
       keys = (key for key of b)
       expect(keys).toEqual ['constructor', 'name', 'method2', 'method1']
 
-    it 'can handle getters which throw exceptions (eg on prototypes)', ->
-      # mongoose defines some getters in this way
+    it 'ignores getter functions', ->
+      # mongoose defines some getters in this way; and calling the getter in the wrong context (eg. on a prototype)
+      # can have bad side effects
       obj = {}
-      obj.__defineGetter__ 'something', ->
-        throw new Error('this getter does not work in this context')
+      Object.defineProperty obj, 'someGetter',
+          get: ->
+            (cb) -> cb(null, 'some result')
+          enumerable: true
 
+      expect('someGetter' in Object.keys(obj)).toBeTruthy()
+      expect(typeof obj.someGetter).toEqual 'function'
+      expect(obj.future.someGetter).not.toBeDefined()
 
-      expect(obj.future).not.toBeNull()
+      # mongoose defines some getters which throw exceptions when called with the wrong context
+      Object.defineProperty obj, 'exception',
+          get: -> throw new Error('this getter does not work in this context')
+          enumerable: true
+
+      expect('exception' in Object.keys(obj)).toBeTruthy()
       # we should not get an error
+      expect(obj.future.exception).not.toBeDefined()
 
     it 'does not add enumerable properties to the Object and Function prototype', ->
       expect(Object.keys(Object::)).toEqual []
