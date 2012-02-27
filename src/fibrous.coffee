@@ -61,7 +61,7 @@ proxyBuilder = (futureOrSync) ->
         func.__proto__ = Object.getPrototypeOf(that)[futureOrSync] if Object.getPrototypeOf(that) isnt Function.prototype
         func
       else
-        Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that)[futureOrSync] or null)
+        Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that)[futureOrSync] or Object::)
 
     result.that = that
 

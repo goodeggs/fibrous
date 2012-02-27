@@ -178,8 +178,14 @@ describe 'fibrous', ->
 
     it 'only uses a prototype chain, containing only its own methods', ->
       expect(Object.keys(a.future)).toEqual ['that',  'method3']
-
       expect(Object.keys(a.sync)).toEqual ['that',  'method3']
+
+    it 'properly sets up the prototype chain of the proxies to derive from Object.prototype', ->
+      # There was a bug with a null root of the prototype chain which was causing weird exception stack traces
+      expect(a.sync.__lookupGetter__).toBeTruthy()
+      expect(a.future.__lookupGetter__).toBeTruthy()
+      expect(A.sync.__lookupGetter__).toBeTruthy()
+      expect(A.future.__lookupGetter__).toBeTruthy()
 
     it 'caches the results', ->
       expect(b.future).toBe b.future
