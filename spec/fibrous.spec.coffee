@@ -39,13 +39,17 @@ describe 'fibrous', ->
         doInFibrous: fibrous (toDoFn) ->
           toDoFn()
 
-    it 'creates an async method which runs in a fiber', (done) ->
-      testRunnerFiber = Fiber.current
-      asyncObj.fibrousAdd 10, (err, result) ->
-        expect(result).toEqual 13
-        expect(Fiber.current).toBeTruthy()
-        expect(Fiber.current).not.toBe testRunnerFiber
-        done()
+    describe 'creates an async method', ->
+      it 'which has length > 0', ->
+        expect(asyncObj.fibrousAdd.length).toBeGreaterThan 0
+
+      it 'which runs in a fiber', (done) ->
+        testRunnerFiber = Fiber.current
+        asyncObj.fibrousAdd 10, (err, result) ->
+          expect(result).toEqual 13
+          expect(Fiber.current).toBeTruthy()
+          expect(Fiber.current).not.toBe testRunnerFiber
+          done()
 
     it 'properly handles this', (done) ->
       asyncObj.fibrousAddViaThis 11, (err, result) ->

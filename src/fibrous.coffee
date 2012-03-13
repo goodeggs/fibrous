@@ -6,7 +6,10 @@ functionWithFiberReturningFuture = Function::future
 
 module.exports = fibrous = (fn) ->
   futureFn = functionWithFiberReturningFuture.call(fn) # handles all the heavy lifting of inheriting an existing fiber when appropriate
-  asyncFn = (args...) ->
+  # don't use (args...) here because asyncFn.length == 0 when we do.  a common (albeit short-sighted)
+  # pattern used in node.js code is checking Fn.length > 0 to determine if a function is async (accepts a callback).
+  asyncFn = (cb) ->
+    args = if 1 <= arguments.length then Array.prototype.slice.call(arguments, 0) else []
     callback = args.pop()
     throw new Error("Fibrous method expects a callback") unless callback instanceof Function
     future = futureFn.apply(@, args)
