@@ -42,11 +42,12 @@ var updateUser = fibrous(function(id, attributes) {
 
 Or even better, with [coffeescript](coffeescript.org):
 
+```coffeescript
 updateUser = fibrous (id, attributes) ->
   user = User.sync.findOne(id)
   user.set(attributes)
   user.sync.save()
-
+```
 
 ### Without Fibrous
 
@@ -258,9 +259,9 @@ not be proxied.
 Contributors
 ------------
 
-Randy Puro [rpuro](https://github.com/randypuro)
-Alon Salant [asalant](https://github.com/asalant)
-Bob Zoller [bobzoller](https://github.com/bobzoller)
+* Randy Puro [rpuro](https://github.com/randypuro)
+* Alon Salant [asalant](https://github.com/asalant)
+* Bob Zoller [bobzoller](https://github.com/bobzoller)
 
 License
 -------
