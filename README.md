@@ -13,6 +13,41 @@ Fibrous requires node version 0.6.x or greater.
 Usage
 -----
 
+Would you rather write this:
+
+```javascript
+var updateUser = function(id, attributes, callback) {
+  User.findOne(id, function (err, user) {
+    if (err) return callback(err);
+    
+    user.set(attributes);
+    user.save(function(err, updated) {
+      if (err) return callback(err);
+
+      callback(null, updated);
+    });
+  });
+});
+```
+
+Or this, which behaves identically to calling code?
+
+```javascript
+var updateUser = fibrous(function(id, attributes) {
+  user = User.sync.findOne(id);
+  user.set(attributes);
+  return user.sync.save();
+});
+```
+
+Or even better, with [coffeescript](coffeescript.org):
+
+updateUser = fibrous (id, attributes) ->
+  user = User.sync.findOne(id)
+  user.set(attributes)
+  user.sync.save()
+
+
 ### Without Fibrous
 
 Using standard node callback-style APIs without fibrous, we write 
@@ -58,21 +93,11 @@ console.log(futures[0].get());
 console.log(futures[1].get())
 ```
 
-Note that fs.sync.readFile is **not** the same as fs.readFileSync. The
+Note that `fs.sync.readFile` is **not** the same as `fs.readFileSync`. The
 latter blocks while the former allows the process to continue while
 waiting for the file read to complete.
 
-### A Less Contrived Example
-
-```javascript
-var updateUser = fibrous(function(id, attributes) {
-  user = User.sync.findOne(id);
-  user.set(attributes);
-  return user.sync.save()
-});
-```
-
-Fiber Required for sync and wait
+Fibrous Requires a Fiber for sync and wait
 --------------------------------
 
 Fibrous uses [node-fibers](https://github.com/laverdet/node-fibers)
@@ -87,7 +112,8 @@ provides two easy ways to do this.
 Pass any function to `fibrous` and it returns a function that
 conforms to standard node async APIs with a callback as the last
 argument that expects `err` as the first argument and the function
-result as the second.
+result as the second. Any exception thrown will be passed to the
+callback as an error.
 
 ```javascript
 var asynFunc = fibrous(function() {
@@ -176,8 +202,9 @@ Console
 -------
 
 Fibrous can make it easier to work with asynchronous methods in the
-console. It's not convenient to run console commands in a fiber, but
-using `future` is still easier than constructing callback on one line.
+console. It's not convenient to create a fiber to run console commands with `sync`, but
+using `future` is still easier than constructing callbacks in the
+console.
 
 ```
 > fs = require('fs');
@@ -201,9 +228,7 @@ data = readFile.sync('/etc/passwd');
 ```
 
 Fibrous adds `future` and `sync` to `Object.prototype` correctly so they
-are not enumerable. 
-
-TODO: disclaimer about extending Object.prototype
+are not enumerable.
 
 These proxy methods also ignore all getters, even those that may
 return functions. If you need to call a getter with fibrous that returns an
@@ -214,6 +239,15 @@ func = obj.getter
 func.future.call(obj, args)
 ```
 
+### Disclaimer
+
+We know that many object to libraries that mix in to Object.prototype
+and Function.prototype. If that's how you feel, then fibrous is probably
+not for you. We've been careful to mix in 'right' so that we don't
+change property enumeration and find that the benefits of having sync
+and future available without explicitly wrapping objects or functions
+are worth the philosophical tradeoffs.
+
 Gotchas
 -------
 
@@ -221,13 +255,24 @@ The first time you call `sync` or `future` on an object, it builds the sync
 and future proxies so if you add a method to the object later, it will
 not be proxied.
 
-Contributing
+Contributors
 ------------
 
-TODO
+Randy Puro [rpuro](https://github.com/randypuro)
+Alon Salant [asalant](https://github.com/asalant)
+Bob Zoller [bobzoller](https://github.com/bobzoller)
 
 License
 -------
 
-TODO
+(The MIT License)
+
+Copyright (c) 2012 Good Eggs, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
