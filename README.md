@@ -3,6 +3,8 @@ Fibrous
 
 Easily mix asynchronous and synchronous programming styles in node.js.
 
+*A project by [Good Eggs](http://goodeggsinc.com) at https://github.com/goodeggs/fibrous.*
+
 Install
 -------
 
@@ -24,19 +26,22 @@ var updateUser = function(id, attributes, callback) {
     user.save(function(err, updated) {
       if (err) return callback(err);
 
+      console.log("Updated", updated);
       callback(null, updated);
     });
   });
 });
 ```
 
-Or this, which behaves identically to calling code?
+Or this, which behaves identically to calling code:
 
 ```javascript
 var updateUser = fibrous(function(id, attributes) {
   user = User.sync.findOne(id);
   user.set(attributes);
-  return user.sync.save();
+  updated = user.sync.save();
+  console.log("Updated", updated);
+  return updated;
 });
 ```
 
@@ -46,7 +51,9 @@ Or even better, with [coffeescript](coffeescript.org):
 updateUser = fibrous (id, attributes) ->
   user = User.sync.findOne(id)
   user.set(attributes)
-  user.sync.save()
+  updated = user.sync.save()
+  console.log("Updated", updated)
+  updated
 ```
 
 ### Without Fibrous
@@ -76,8 +83,7 @@ This is the same as writing:
 
 ```javascript
 future = fs.future.readFile('/etc/passwd');
-fibrous.wait(future);
-data = future.get();
+data = future.wait();
 console.log(data);
 ```
 
@@ -99,7 +105,7 @@ latter blocks while the former allows the process to continue while
 waiting for the file read to complete.
 
 Fibrous Requires a Fiber for sync and wait
---------------------------------
+------------------------------------------
 
 Fibrous uses [node-fibers](https://github.com/laverdet/node-fibers)
 behind the scenes.
@@ -166,6 +172,19 @@ app.get('/', function(req, res){
 });
 ```
 
+Futures
+-------
+
+Fibrous uses the `Future` implementation from [node-fibers](https://github.com/laverdet/node-fibers).
+
+`future.wait` waits for the future to resolve then returns the result while allowing the process
+to continue. `fibrous.wait` accepts a single future, multiple future arguments or an array of futures.
+It returns the result of the future if passed just one, or an array of
+results if passed multiple.
+
+`future.get` returns the result of the resolved future or throws an
+exception if not yet resolved.
+
 Error Handling / Exceptions
 ---------------------------
 
@@ -214,11 +233,12 @@ console.
 > data.get()
 ```
 
+In this example, `data.get()` will return the result of the future
+provided you have waited long enough (not very long) for the future to
+complete.
+
 Behind The Scenes
 -----------------
-
-Fibrous uses the `Future` implementation from [node-fibers](https://github.com/laverdet/node-fibers).
-`fibrous.wait` is a convenience passthrough to `Fiber.wait`.
 
 Fibrous mixes `future` and `sync` into `Function.prototype` so you can
 use them directly as in:
@@ -256,12 +276,32 @@ The first time you call `sync` or `future` on an object, it builds the sync
 and future proxies so if you add a method to the object later, it will
 not be proxied.
 
+Contributing
+------------
+
+```
+git clone git://github.com/goodeggs/fibrous.git
+npm install
+npm test
+```
+
+Fibrous is written in [coffeescript](http://coffeescript.org) with
+source in `src/` compiled to `lib/`.
+
+Tests are written with [jasmine-node](https://github.com/mhevery/jasmine-node) in `spec/`.
+
+Run tests with `npm test` which will also compile the coffeescript to
+`lib/`.
+
+Pull requests are welcome. Please provide tests for your changes and
+features. Thanks!
+
 Contributors
 ------------
 
-* Randy Puro [rpuro](https://github.com/randypuro)
-* Alon Salant [asalant](https://github.com/asalant)
-* Bob Zoller [bobzoller](https://github.com/bobzoller)
+* Randy Puro ([randypuro](https://github.com/randypuro))
+* Alon Salant ([asalant](https://github.com/asalant))
+* Bob Zoller ([bobzoller](https://github.com/bobzoller))
 
 License
 -------
