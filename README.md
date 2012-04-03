@@ -110,7 +110,7 @@ Fibrous Requires a Fiber for sync and wait
 Fibrous uses [node-fibers](https://github.com/laverdet/node-fibers)
 behind the scenes.
 
-`fibrous.wait` and `fibrous.sync` (which uses `wait`
+`wait` and `sync` (which uses `wait`
 internally) require that they are called within a fiber. Fibrous
 provides two easy ways to do this.
 
