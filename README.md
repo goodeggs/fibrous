@@ -96,9 +96,8 @@ futures = [
   fs.future.readFile('/etc/passwd'),
   fs.future.readFile('/etc/hosts')
 ];
-data = fibrous.wait(futures);                     // or fibrous.wait(future1, future2,...)
-console.log(data[0]);                             // or futures[0].get()
-console.log(data[1]);
+data = fibrous.wait(futures);
+console.log(data[0], data[1]);
 ```
 
 Note that `fs.sync.readFile` is **not** the same as `fs.readFileSync`. The
