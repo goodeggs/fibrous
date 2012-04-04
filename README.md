@@ -262,7 +262,7 @@ func.future.call(obj, args)
 
 ### Disclaimer
 
-We know that many object to libraries that mix in to Object.prototype
+Some people don't like libraries that mix in to Object.prototype
 and Function.prototype. If that's how you feel, then fibrous is probably
 not for you. We've been careful to mix in 'right' so that we don't
 change property enumeration and find that the benefits of having sync
