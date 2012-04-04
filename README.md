@@ -92,12 +92,13 @@ console.log(data);
 Or for multiple files read asynchronously:
 
 ```javascript
-futures = []
-futures.push(fs.future.readFile('/etc/passwd'));
-futures.push(fs.futures.readFile('/etc/hosts'));
-fibrous.wait(futures);                               // or fibrous.wait(future1, future2,...)
-console.log(futures[0].get());
-console.log(futures[1].get())
+futures = [
+  fs.future.readFile('/etc/passwd'),
+  fs.future.readFile('/etc/hosts')
+];
+data = fibrous.wait(futures);                     // or fibrous.wait(future1, future2,...)
+console.log(data[0]);                             // or futures[0].get()
+console.log(data[1])
 ```
 
 Note that `fs.sync.readFile` is **not** the same as `fs.readFileSync`. The
@@ -118,7 +119,7 @@ provides two easy ways to do this.
 
 Pass any function to `fibrous` and it returns a function that
 conforms to standard node async APIs with a callback as the last
-argument that expects `err` as the first argument and the function
+argument. The callback expects `err` as the first argument and the function
 result as the second. Any exception thrown will be passed to the
 callback as an error.
 
