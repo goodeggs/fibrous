@@ -98,7 +98,7 @@ futures = [
 ];
 data = fibrous.wait(futures);                     // or fibrous.wait(future1, future2,...)
 console.log(data[0]);                             // or futures[0].get()
-console.log(data[1])
+console.log(data[1]);
 ```
 
 Note that `fs.sync.readFile` is **not** the same as `fs.readFileSync`. The
