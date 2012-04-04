@@ -214,7 +214,7 @@ describe('My Spec', function() {
 });
 ```
 
-If an asynchronous method called through fibrous returns an error, the
+If an asynchronous method called through fibrous produces an error, the
 spec helper will fail the spec.
 
 
