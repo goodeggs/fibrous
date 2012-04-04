@@ -7,11 +7,7 @@
                       , "url"  : "https://github.com/goodeggs/fibrous.git"
                       }
 , "keywords"        : ["fiber", "fibers", "coroutine", "future", "async", "sync"]
-, "author"          : "Randy Puro <randy@goodeggsinc.com>"
-, "contributors"    : [ "Bob Zoller <bob@goodeggsinc.com>"
-                      , "Alon Salant <alon@goodeggsinc.com>"
-                      ]
-, "maintainers"     : [ 
+, "contributors"    : [
                         {
                           "name": "Randy Puro"
                         , "email": "randypuro@gmail.com"
