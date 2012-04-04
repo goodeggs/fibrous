@@ -1,17 +1,33 @@
 {
   "name"            : "fibrous"
-, "version"         : "0.2.4"
-, "description"     : "A library to help with fibers"
+, "version"         : "0.2.5"
+, "description"     : "Easily mix asynchronous and synchronous programming styles in node.js"
 , "homepage"        : "http://github.com/goodeggs/fibrous"
 , "repository"      : { "type" : "git"
                       , "url"  : "https://github.com/goodeggs/fibrous.git"
                       }
-, "keywords"        : ["fiber", "fibers", "coroutine"]
+, "keywords"        : ["fiber", "fibers", "coroutine", "future", "async", "sync"]
 , "author"          : "Randy Puro <randy@goodeggsinc.com>"
 , "contributors"    : [ "Bob Zoller <bob@goodeggsinc.com>"
                       , "Alon Salant <alon@goodeggsinc.com>"
                       ]
-, "maintainers"     : "Randy Puro <randy@goodeggsinc.com>"
+, "maintainers"     : [ 
+                        {
+                          "name": "Randy Puro"
+                        , "email": "randypuro@gmail.com"
+                        , "web": "https://github.com/randypuro"
+                        }
+                      , {
+                          "name": "Alon Salant"
+                        , "email": "alon@salant.org"
+                        , "web": "https://github.com/asalant"
+                      }
+                      , {
+                          "name": "Bob Zoller"
+                        , "email": "bob@zoller.us"
+                        , "web": "https://github.com/bobzoller"
+                      }
+                      ]
 , "licenses"        : ["MIT"]
 , "dependencies"    : { "fibers" : "0.6.x"
                       }
