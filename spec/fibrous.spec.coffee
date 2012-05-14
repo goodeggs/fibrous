@@ -1,5 +1,6 @@
 require './support/spec_helper'
 fibrous = require '../lib/fibrous'
+Fiber = require 'fibers'
 Future = require 'fibers/future'
 
 describe 'fibrous', ->

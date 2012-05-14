@@ -1,4 +1,4 @@
-require 'fibers'
+Fiber = require 'fibers'
 Future = require 'fibers/future'
 
 #We replace Future's version of Function.prototype.future with our own, but use theirs later.
