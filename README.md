@@ -5,6 +5,14 @@ Easily mix asynchronous and synchronous programming styles in node.js.
 
 *A project by [Good Eggs](http://goodeggsinc.com) at https://github.com/goodeggs/fibrous.*
 
+Benefits
+--------
+
+* Easy-to-follow flow control for both serial and parallel execution
+* Complete stack traces, even for exceptions thrown within callbacks
+* No boilerplate code for error and exception handling
+* Conforms to standard node async API
+
 Install
 -------
 
