@@ -78,9 +78,12 @@ defineMemoizedPerInstanceProperty = (target, propertyName, factory) ->
   cacheKey = "__fibrous#{propertyName}__"
   Object.defineProperty target, propertyName,
     enumerable: false
+    set: (value) ->
+      delete @[cacheKey]
+      Object.defineProperty @, propertyName, value: value, writable:true, configurable: true, enumerable: true # allow overriding the property turning back to default behavior
     get: ->
       unless @hasOwnProperty(cacheKey) and @[cacheKey]
-        Object.defineProperty @, cacheKey, value: factory(@), enumerable: false # ensure the cached version is not enumerable
+        Object.defineProperty @, cacheKey, value: factory(@), writable: true, configurable: true, enumerable: false # ensure the cached version is not enumerable
       @[cacheKey]
 
 

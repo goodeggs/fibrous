@@ -221,6 +221,31 @@ describe 'fibrous', ->
       keys = (key for key of b)
       expect(keys).toEqual ['constructor', 'name', 'method2', 'method1']
 
+    it 'allows overriding the sync or future properties', ->
+      # for instance, some external packages define sync or future methods in this way
+      f = ->
+      s = ->
+
+      expect(a.future).toBeTruthy()
+      expect(a.future).not.toEqual f
+      expect('future' in Object.keys(a)).not.toBeTruthy()
+      expect(a.hasOwnProperty('__fibrousfuture__')).toBeTruthy()
+
+      expect(a.sync).toBeTruthy()
+      expect(a.sync).not.toEqual s
+      expect('sync' in Object.keys(a)).not.toBeTruthy()
+      expect(a.hasOwnProperty('__fibroussync__')).toBeTruthy()
+
+      a.future = f
+      expect(a.future).toEqual f
+      expect('future' in Object.keys(a)).toBeTruthy() # now enumerable
+      expect(a.hasOwnProperty('__fibrousfuture__')).not.toBeTruthy()
+
+      a.sync = s
+      expect(a.sync).toEqual s
+      expect('sync' in Object.keys(a)).toBeTruthy() # now enumerable
+      expect(a.hasOwnProperty('__fibroussync__')).not.toBeTruthy()
+
     it 'ignores getter functions', ->
       # mongoose defines some getters in this way; and calling the getter in the wrong context (eg. on a prototype)
       # can have bad side effects
