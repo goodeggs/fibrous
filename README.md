@@ -229,10 +229,11 @@ spec helper will fail the spec.
 Console
 -------
 
-Fibrous can make it easier to work with asynchronous methods in the
-console. It's not convenient to create a fiber to run console commands with `sync`, but
-using `future` is still easier than constructing callbacks in the
-console.
+Fibrous makes it much easier to work with asynchronous methods in an
+interactive console, or REPL.
+
+If you find yourself in an interactive session, you can require fibrous so that
+you can use `future`.
 
 ```
 > fs = require('fs');
@@ -241,9 +242,42 @@ console.
 > data.get()
 ```
 
-In this example, `data.get()` will return the result of the future
-provided you have waited long enough (not very long) for the future to
-complete.
+In this example, `data.get()` will return the result of the future,
+provided you have waited long enough for the future to complete.
+(The time it takes to type the next line is almost always long enough.)
+
+You can't use `sync` in the above scenario because a fiber has not been created
+so you can't call `wait` on a future.
+
+Fibrous does provide a bin script that creates a new interactive console where each command
+is run in a fiber so you can use sync. If you install fibrous with `npm install -g fibrous`
+or have `./node_modules/.bin` on your path, you can just run:
+
+```
+$ fibrous
+Starting fibrous node REPL...
+> fs = require('fs');
+> data = fs.sync.readFile('/etc/passwd', 'utf8');
+> console.log(data);
+##
+# User Database
+#
+...
+```
+
+Or for a CoffeeScript REPL:
+
+```
+$ fibrous -c [or --coffee]
+Starting fibrous coffee REPL...
+coffee> fs = require 'fs'
+coffee> data = fs.sync.readFile '/etc/passwd', 'utf8'
+coffee> console.log data
+##
+# User Database
+#
+...
+```
 
 Behind The Scenes
 -----------------
