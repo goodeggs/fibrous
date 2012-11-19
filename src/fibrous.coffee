@@ -1,13 +1,15 @@
 Fiber = require 'fibers'
 Future = require 'fibers/future'
 
-#We replace Future's version of Function.prototype.future with our own, but use theirs later.
+# We replace Future's version of Function.prototype.future with our own.
+# Keep a reference so we can use theirs later.
 functionWithFiberReturningFuture = Function::future
 
 module.exports = fibrous = (fn) ->
   futureFn = functionWithFiberReturningFuture.call(fn) # handles all the heavy lifting of inheriting an existing fiber when appropriate
-  # don't use (args...) here because asyncFn.length == 0 when we do.  a common (albeit short-sighted)
-  # pattern used in node.js code is checking Fn.length > 0 to determine if a function is async (accepts a callback).
+  # Don't use (args...) here because asyncFn.length == 0 when we do.
+  # A common (albeit short-sighted) pattern used in node.js code is checking
+  # Fn.length > 0 to determine if a function is async (accepts a callback).
   asyncFn = (cb) ->
     args = if 1 <= arguments.length then Array.prototype.slice.call(arguments, 0) else []
     callback = args.pop()
@@ -23,7 +25,7 @@ futureize = (asyncFn) ->
   (args...) ->
     fnThis = @ is asyncFn and global or @
 
-    #don't create unnecessary fibers and futures
+    # Don't create unnecessary fibers and futures
     return asyncFn.__fibrousFutureFn__.apply(fnThis, args) if asyncFn.__fibrousFutureFn__
 
     future = new Future
@@ -31,13 +33,13 @@ futureize = (asyncFn) ->
     try
       asyncFn.apply(fnThis, args)
     catch e
-      # ensure synchronous errors are returned via the future
+      # Ensure synchronous errors are returned via the future
       future.throw(e)
     future
 
 synchronize = (asyncFn) ->
   (args...) ->
-    #When calling a fibrous function synchronously, we don't need to create a future
+    # When calling a fibrous function synchronously, we don't need to create a future
     return asyncFn.__fibrousFn__.apply(@ is asyncFn and global or @, args) if asyncFn.__fibrousFn__
 
     asyncFn.future.apply(@, args).wait()
@@ -70,7 +72,7 @@ proxyBuilder = (futureOrSync) ->
 
     proxyAll that, result, (key) ->
       (args...) ->
-          #relookup the method every time to pick up reassignments of key on obj or an instance
+          # Relookup the method every time to pick up reassignments of key on obj or an instance
           @that[key][futureOrSync].apply(@that, args)
 
 
@@ -86,12 +88,16 @@ defineMemoizedPerInstanceProperty = (target, propertyName, factory) ->
         Object.defineProperty @, cacheKey, value: factory(@), writable: true, configurable: true, enumerable: false # ensure the cached version is not enumerable
       @[cacheKey]
 
-
+# Mixin sync and future to Object and Function
 for base in [Object::, Function::]
   defineMemoizedPerInstanceProperty(base, 'future', proxyBuilder('future'))
   defineMemoizedPerInstanceProperty(base, 'sync', proxyBuilder('sync'))
 
-
+# Wait for all provided futures to resolve:
+#
+#   result  = fibrous.wait(future)
+#   results = fibrous.wait(future1, future2)
+#   results = fibrous.wait([future1, future2])
 fibrous.wait = (futures...) ->
   getResults = (futureOrArray) ->
     return futureOrArray.get() if (futureOrArray instanceof Future)
@@ -103,7 +109,15 @@ fibrous.wait = (futures...) ->
   result
 
 
-# Run the subsequent steps in a Fiber (at least until some non-cooperative async operation)
+# Connect middleware ensures that all following request handlers run in a Fiber.
+#
+# To use with Express:
+#
+#   var fibrous = require('fibrous');
+#   var app = express.createServer();
+#   app.use(fibrous.middleware);
+#
+# Note that non-Fiber cooperative async operations will run outside the fiber.
 fibrous.middleware = (req, res, next) ->
   process.nextTick ->
     Fiber ->
