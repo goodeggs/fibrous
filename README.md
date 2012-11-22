@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/goodeggs/fibrous.png)](http://travis-ci.org/goodeggs/fibrous)
 Fibrous
 =======
 
