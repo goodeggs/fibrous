@@ -1,6 +1,6 @@
 {
     "name"            : "fibrous"
-    , "version"         : "0.2.7"
+    , "version"         : "0.2.8"
     , "description"     : "Easily mix asynchronous and synchronous programming styles in node.js"
     , "homepage"        : "http://github.com/goodeggs/fibrous"
     , "repository"      : {
