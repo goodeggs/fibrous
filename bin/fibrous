@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+var vm = require('vm');
+var repl = require('repl');
+var CoffeeScript = require('coffee-script');
+var fibrous = require('..');
+
+if (['-c', '--coffee'].indexOf(process.argv[2]) != -1) {
+  console.log("Starting fibrous coffee REPL...");
+  repl.start({
+    prompt: "coffee> ",
+    eval: fibrous(function(code, context, file) {
+      code = CoffeeScript.compile(code, {filename: file, bare: true});
+      return vm.runInContext(code, context, file);
+    })
+  });
+}
+else {
+  console.log("Starting fibrous node REPL...");
+  repl.start({
+    eval: fibrous(function(code, context, file) {
+      return vm.runInContext(code, context, file);
+    })
+  });
+}
+
