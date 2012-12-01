@@ -16,11 +16,14 @@ Benefits
 Install
 -------
 
-    npm install fibrous
-
 Fibrous requires node version 0.6.x or greater.
 
-Usage
+```
+npm install fibrous
+```
+
+
+Examples
 -----
 
 Would you rather write this:
@@ -53,7 +56,7 @@ var updateUser = fibrous(function(id, attributes) {
 });
 ```
 
-Or even better, with [coffeescript](coffeescript.org):
+Or even better, with [CoffeeScript](http://coffeescript.org):
 
 ```coffeescript
 updateUser = fibrous (id, attributes) ->
@@ -112,8 +115,8 @@ Note that `fs.sync.readFile` is **not** the same as `fs.readFileSync`. The
 latter blocks while the former allows the process to continue while
 waiting for the file read to complete.
 
-Fibrous Requires a Fiber for sync and wait
-------------------------------------------
+Make It Fibrous
+---------------
 
 Fibrous uses [node-fibers](https://github.com/laverdet/node-fibers)
 behind the scenes.
@@ -159,7 +162,7 @@ asyncFunc = fibrous ->
 running in an existing fiber (from higher up the call stack) or will
 create a new fiber if one does not already exist.
 
-### 2. Connect Middleware
+### 2. Express/Connect Middleware
 
 Fibrous provides [connect](http://www.senchalabs.org/connect/)
 middleware that ensures that every request runs in a fiber.
@@ -170,7 +173,7 @@ want to use this middleware.
 var express = require('express');
 var fibrous = require('fibrous');
 
-var app = express.createServer();
+var app = express();
 
 app.use(fibrous.middleware);
 
@@ -180,21 +183,10 @@ app.get('/', function(req, res){
 });
 ```
 
-Futures
+Details
 -------
 
-Fibrous uses the `Future` implementation from [node-fibers](https://github.com/laverdet/node-fibers).
-
-`future.wait` waits for the future to resolve then returns the result while allowing the process
-to continue. `fibrous.wait` accepts a single future, multiple future arguments or an array of futures.
-It returns the result of the future if passed just one, or an array of
-results if passed multiple.
-
-`future.get` returns the result of the resolved future or throws an
-exception if not yet resolved.
-
-Error Handling / Exceptions
----------------------------
+### Error Handling / Exceptions
 
 In the above examples, if `readFile` produces an error, the fibrous versions
 (both `sync` and `wait`) will throw an exception. Additionally, the stack
@@ -202,8 +194,7 @@ trace will include the stack of the calling code unlike exceptions
 typically thrown from within callback.
 
 
-Testing
--------
+### Testing
 
 Fibrous provides a test helper for [jasmine-node](https://github.com/mhevery/jasmine-node) 
 that ensures that `beforeEach`, `it`, and `afterEach` run in a fiber.
@@ -225,9 +216,9 @@ describe('My Spec', function() {
 If an asynchronous method called through fibrous produces an error, the
 spec helper will fail the spec.
 
+If you write a helper for other testing frameworks, we'd love to include it in the project.
 
-Console
--------
+### Console
 
 Fibrous makes it much easier to work with asynchronous methods in an
 interactive console, or REPL.
@@ -279,8 +270,30 @@ coffee> console.log data
 ...
 ```
 
+### Gotchas
+
+
+The first time you call `sync` or `future` on an object, it builds the sync
+and future proxies so if you add a method to the object later, it will
+not be proxied.
+
 Behind The Scenes
 -----------------
+
+
+### Futures
+
+Fibrous uses the `Future` implementation from [node-fibers](https://github.com/laverdet/node-fibers).
+
+`future.wait` waits for the future to resolve then returns the result while allowing the process
+to continue. `fibrous.wait` accepts a single future, multiple future arguments or an array of futures.
+It returns the result of the future if passed just one, or an array of
+results if passed multiple.
+
+`future.get` returns the result of the resolved future or throws an
+exception if not yet resolved.
+
+### Object & Function mixins
 
 Fibrous mixes `future` and `sync` into `Function.prototype` so you can
 use them directly as in:
@@ -311,12 +324,6 @@ change property enumeration and find that the benefits of having sync
 and future available without explicitly wrapping objects or functions
 are worth the philosophical tradeoffs.
 
-Gotchas
--------
-
-The first time you call `sync` or `future` on an object, it builds the sync
-and future proxies so if you add a method to the object later, it will
-not be proxied.
 
 Contributing
 ------------
