@@ -44,13 +44,10 @@ synchronize = (asyncFn) ->
 
     asyncFn.future.apply(@, args).wait()
 
-objectPrototypeProps = {}
-objectPrototypeProps[key] = true for key in Object.getOwnPropertyNames(Object::)
-
 proxyAll = (src, target, proxyFn) ->
-  for key in Object.keys(src) # Gives back the keys on this object, not on prototypes; ignore any rewrites of toString which can cause problems.
+  for key in Object.keys(src) # Gives back the keys on this object, not on prototypes
     do (key) ->
-      return if objectPrototypeProps[key]
+      return if Object::[key]? # Ignore any rewrites of toString, etc which can cause problems
       return if Object.getOwnPropertyDescriptor(src, key).get? # getter methods can have unintentional side effects when called in the wrong context
       return unless typeof src[key] is 'function' # getter methods may throw an exception in some contexts
 
