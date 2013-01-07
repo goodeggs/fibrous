@@ -183,6 +183,23 @@ app.get('/', function(req, res){
 });
 ```
 
+### 3. Wrap-and-run with fibrous.run
+
+If the other methods don't meet your particular needs, you can use 
+`fibrous.run` which creates a fibrous function then executes it.
+
+You can handle any errors inside the passed function with try/catch or 
+by passing a second function that acts as an error handler.
+
+```javascript
+fibrous.run(function() {
+    var data = fs.sync.readFile('/etc/passwd');
+    console.log(data.toString());
+}, function(err) {
+    console.log("Handle both async and sync errors here", err);
+});
+```
+
 Details
 -------
 
