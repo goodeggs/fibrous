@@ -129,8 +129,7 @@ fibrous.middleware = (req, res, next) ->
 # 
 # Handle errors with try/catch or pass a second argument to act as an error handler
 fibrous.run = (fun, handler) ->
-  fibrousFun = fibrous ->
-    fun()
+  fibrousFun = fibrous fun
   fibrousFun (err) ->
     if (handler?)
       handler(err)
