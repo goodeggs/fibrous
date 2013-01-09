@@ -138,6 +138,35 @@ describe 'fibrous', ->
       results = fibrous.wait([future1, future2], future3)
       expect(results).toEqual [[5,6],7]
 
+
+  describe 'run', ->
+    it 'runs a function in a fiber', (done) ->
+      fibrous.run ->
+        result = asyncObj.sync.fibrousAdd(1)
+        expect(result).toEqual 4
+        done()
+
+    it 'passes function return value to the callback', (done) ->
+       fibrous.run ->
+         asyncObj.sync.fibrousAdd(1)
+       , (err, result) ->
+         expect(result).toEqual 4
+         done()
+
+    it 'passes sync errors to the callback', (done) ->
+      fibrous.run ->
+        asyncObj.sync.fibrousSyncError(1)
+      , (err) ->
+        expect(err).toEqual(new Error('immediate error'))
+        done()
+
+    it 'passes async errors to the callback', (done) ->
+      fibrous.run ->
+        asyncObj.sync.fibrousAsyncError(1)
+      , (err) ->
+        expect(err).toEqual(new Error('async error'))
+        done()
+     
   describe 'middleware', ->
 
     it 'runs in a fiber', (done) ->
