@@ -178,25 +178,26 @@ var app = express();
 app.use(fibrous.middleware);
 
 app.get('/', function(req, res){
-    data = fs.sync.readFile('./index.html', 'utf8');
-    res.send(data);
+  data = fs.sync.readFile('./index.html', 'utf8');
+  res.send(data);
 });
 ```
 
 ### 3. Wrap-and-run with fibrous.run
 
-If the other methods don't meet your particular needs, you can use 
-`fibrous.run` which creates a fibrous function then executes it.
+`fibrous.run` is a utility function that creates a fibrous function then executes it.
 
-You can handle any errors inside the passed function with try/catch or 
-by passing a second function that acts as an error handler.
+Provide a callback to handle any errors and the return value of the passed function (if you need it).
+If you don't provide a callback and there is an error, run will throw the error which will produce an uncaught exception.
+That may be okay for quick and dirty work but is probably a bad idea in production code.
 
 ```javascript
 fibrous.run(function() {
-    var data = fs.sync.readFile('/etc/passwd');
-    console.log(data.toString());
-}, function(err) {
-    console.log("Handle both async and sync errors here", err);
+  var data = fs.sync.readFile('/etc/passwd');
+  console.log(data.toString());
+  return data;
+}, function(err, returnValue) {
+  console.log("Handle both async and sync errors here", err);
 });
 ```
 

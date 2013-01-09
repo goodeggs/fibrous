@@ -125,16 +125,19 @@ fibrous.middleware = (req, res, next) ->
         console.error('Unexpected error bubble up to the top of the fiber:', e?.stack or e)
     .run()
 
-# A shorthand function to create a new fibrous function then run it
-# 
-# Handle errors with try/catch or pass a second argument to act as an error handler
-fibrous.run = (fun, handler) ->
-  fibrousFun = fibrous fun
-  fibrousFun (err) ->
-    if (handler?)
-      handler(err)
-    else if (err)
-      throw err
+# Create a new fibrous function and run it. Handle errors with try/catch or pass an error
+# handler callback as second argument.
+#
+#  fibrous.run(function() {
+#    var data = fs.sync.readFile('/etc/passwd');
+#    console.log(data.toString());
+#  }, function(err) {
+#    console.log("Handle both async and sync errors here", err);
+#  });
+fibrous.run = (fn, cb) ->
+  cb ?= (err) ->
+    throw err if err?
+  fibrous(fn)(cb)
 
 # Export Future for fibrous users
 fibrous.Future = Future

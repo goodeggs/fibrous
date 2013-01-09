@@ -140,24 +140,32 @@ describe 'fibrous', ->
 
 
   describe 'run', ->
-   it 'runs a function in a fiber', (done) ->
-     fibrous.run ->
-       result = asyncObj.sync.fibrousAdd(1)
-       expect(result).toEqual 4
-       done()
-   it 'passes sync errors to the handler', (done) ->
-     fibrous.run ->
-       asyncObj.sync.fibrousSyncError(1)
-     , (err) ->
-       expect(err).toEqual(new Error('immediate error'))
-       done()
+    it 'runs a function in a fiber', (done) ->
+      fibrous.run ->
+        result = asyncObj.sync.fibrousAdd(1)
+        expect(result).toEqual 4
+        done()
 
-   it 'passes async errors to the handler', (done) ->
-     fibrous.run ->
-       asyncObj.sync.fibrousAsyncError(1)
-     , (err) ->
-       expect(err).toEqual(new Error('async error'))
-       done()
+    it 'passes function return value to the callback', (done) ->
+       fibrous.run ->
+         asyncObj.sync.fibrousAdd(1)
+       , (err, result) ->
+         expect(result).toEqual 4
+         done()
+
+    it 'passes sync errors to the callback', (done) ->
+      fibrous.run ->
+        asyncObj.sync.fibrousSyncError(1)
+      , (err) ->
+        expect(err).toEqual(new Error('immediate error'))
+        done()
+
+    it 'passes async errors to the callback', (done) ->
+      fibrous.run ->
+        asyncObj.sync.fibrousAsyncError(1)
+      , (err) ->
+        expect(err).toEqual(new Error('async error'))
+        done()
      
   describe 'middleware', ->
 
