@@ -146,6 +146,10 @@ describe 'fibrous', ->
         expect(Fiber.current).toBeTruthy()
         done()
 
+  describe 'Future', ->
+    it "exports node-fibers Future", ->
+      expect(fibrous.Future).toEqual Future
+
   describe 'inheritance', ->
 
     class A
