@@ -22,7 +22,7 @@ for jasmineFunction in [ "it", "beforeEach", "afterEach"]
   do (jasmineFunction) ->
     original = jasmine.Env.prototype[jasmineFunction]
     jasmine.Env.prototype[jasmineFunction] = (args...) ->
-      func = args.pop()
+      (func = args.pop()) until typeof func is 'function'
 
       return original.call @, args..., ->
         #Causes non async specs to run inside a fiber
