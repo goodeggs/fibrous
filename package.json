@@ -1,47 +1,57 @@
 {
-    "name"            : "fibrous"
-    , "version"         : "0.3.0"
-    , "description"     : "Easily mix asynchronous and synchronous programming styles in node.js"
-    , "homepage"        : "http://goodeggs.github.com/fibrous/"
-    , "repository"      : {
-          "type" : "git"
-        , "url"  : "https://github.com/goodeggs/fibrous.git"
+  "name": "fibrous",
+  "version": "0.3.1",
+  "description": "Easily mix asynchronous and synchronous programming styles in node.js",
+  "homepage": "http://goodeggs.github.com/fibrous/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/goodeggs/fibrous.git"
+  },
+  "keywords": [
+    "fiber",
+    "fibers",
+    "coroutine",
+    "future",
+    "async",
+    "sync",
+    "wait"
+  ],
+  "contributors": [
+    {
+      "name": "Randy Puro",
+      "email": "randypuro@gmail.com",
+      "web": "https://github.com/randypuro"
+    },
+    {
+      "name": "Alon Salant",
+      "email": "alon@salant.org",
+      "web": "https://github.com/asalant"
+    },
+    {
+      "name": "Bob Zoller",
+      "email": "bob@zoller.us",
+      "web": "https://github.com/bobzoller"
     }
-    , "keywords"        : ["fiber", "fibers", "coroutine", "future", "async", "sync", "wait"]
-    , "contributors"    : [
-        {
-            "name": "Randy Puro"
-            , "email": "randypuro@gmail.com"
-            , "web": "https://github.com/randypuro"
-        }
-        , {
-            "name": "Alon Salant"
-            , "email": "alon@salant.org"
-            , "web": "https://github.com/asalant"
-        }
-        , {
-            "name": "Bob Zoller"
-            , "email": "bob@zoller.us"
-            , "web": "https://github.com/bobzoller"
-        }
-    ]
-    , "licenses"        : ["MIT"]
-    , "dependencies"    : {
-        "fibers" : ">=0.6.7"
-    }
-    , "devDependencies" : {
-          "jasmine-node" : "1.8.x"
-        , "coffee-script" : "*"
-    }
-    , "main"            : "lib/fibrous"
-    , "bin": {
-        "fibrous": "./bin/fibrous"
-    }
-    , "engine" : {
-        "node" : ">=0.6"
-    }
-    , "scripts" : {
-          "pretest" : "coffee -c -o lib src"
-        , "test" : "jasmine-node --coffee --junitreport spec"
-    }
+  ],
+  "licenses": [
+    "MIT"
+  ],
+  "dependencies": {
+    "fibers": ">=0.6.7"
+  },
+  "devDependencies": {
+    "jasmine-node": "1.8.x",
+    "coffee-script": "*"
+  },
+  "main": "lib/fibrous",
+  "bin": {
+    "fibrous": "./bin/fibrous"
+  },
+  "engine": {
+    "node": ">=0.6"
+  },
+  "scripts": {
+    "pretest": "coffee -c -o lib src",
+    "test": "jasmine-node --coffee --junitreport spec"
+  }
 }
