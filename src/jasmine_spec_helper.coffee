@@ -18,9 +18,11 @@ class jasmine.AsyncBlock extends jasmine.Block
 
     @func.call @spec, complete
 
+console.log "In jasmine
 for jasmineFunction in [ "it", "beforeEach", "afterEach"]
   do (jasmineFunction) ->
     original = jasmine.Env.prototype[jasmineFunction]
+    console.log "Wrapping #{jasmineFunction}:", original
     jasmine.Env.prototype[jasmineFunction] = (args...) ->
       func = args.pop()
 
