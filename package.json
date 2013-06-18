@@ -37,11 +37,11 @@
     "MIT"
   ],
   "dependencies": {
-    "fibers": ">=0.6.7"
+    "fibers": ">=0.6.7",
+    "coffee-script": "*"
   },
   "devDependencies": {
-    "jasmine-node": "1.8.x",
-    "coffee-script": "*"
+    "jasmine-node": "1.8.x"
   },
   "main": "lib/fibrous",
   "bin": {
