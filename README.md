@@ -30,17 +30,17 @@ Would you rather write this:
 
 ```javascript
 var updateUser = function(id, attributes, callback) {
-  User.findOne(id, function (err, user) {
+    User.findOne(id, function (err, user) {
     if (err) return callback(err);
     
     user.set(attributes);
     user.save(function(err, updated) {
-      if (err) return callback(err);
+        if (err) return callback(err);
 
-      console.log("Updated", updated);
-      callback(null, updated);
+        console.log("Updated", updated);
+        callback(null, updated);
     });
-  });
+    });
 });
 ```
 
@@ -201,6 +201,22 @@ fibrous.run(function() {
 });
 ```
 
+### 4. Waiting on a callback
+
+Sometimes you need to wait for a callback to happen that does not conform to `err, result` format (for example streams). In this case the following pattern works well:
+
+```javascript
+var stream = <your stream>
+
+function wait(callback) {
+  stream.on('close', function(code) {
+    callback(null, code);
+  });
+}
+
+var code = wait.sync();
+```
+
 Details
 -------
 
@@ -294,6 +310,28 @@ coffee> console.log data
 The first time you call `sync` or `future` on an object, it builds the sync
 and future proxies so if you add a method to the object later, it will
 not be proxied.
+
+#### With Express and `bodyParser` or `json`
+
+You might be getting an error in Express that you are not in context of a fiber even after adding `fibrous.middleware` to your stack. This can happen if you added it before `express.json()` or `express.bodyParser()`. Here's an example:
+
+```javascript
+// might not work
+app.use(fibrous.middleware);
+app.use(express.bodyParser());
+
+// or
+app.use(fibrous.middleware);
+app.use(express.json());
+
+// should work
+app.use(express.bodyParser());
+app.use(fibrous.middleware);
+
+// or
+app.use(express.json());
+app.use(fibrous.middleware);
+```
 
 Behind The Scenes
 -----------------
