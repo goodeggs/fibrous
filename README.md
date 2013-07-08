@@ -30,17 +30,17 @@ Would you rather write this:
 
 ```javascript
 var updateUser = function(id, attributes, callback) {
-    User.findOne(id, function (err, user) {
+  User.findOne(id, function (err, user) {
     if (err) return callback(err);
     
     user.set(attributes);
     user.save(function(err, updated) {
-        if (err) return callback(err);
+      if (err) return callback(err);
 
-        console.log("Updated", updated);
-        callback(null, updated);
+      console.log("Updated", updated);
+      callback(null, updated);
     });
-    });
+  });
 });
 ```
 
