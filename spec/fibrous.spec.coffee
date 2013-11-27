@@ -138,7 +138,6 @@ describe 'fibrous', ->
       results = fibrous.wait([future1, future2], future3)
       expect(results).toEqual [[5,6],7]
 
-
   describe 'run', ->
     it 'runs a function in a fiber', (done) ->
       fibrous.run ->
@@ -178,6 +177,15 @@ describe 'fibrous', ->
   describe 'Future', ->
     it "exports node-fibers Future", ->
       expect(fibrous.Future).toEqual Future
+
+  describe 'an object with overwritten hasOwnProperty', ->
+    {obj} = {}
+
+    beforeEach ->
+      obj = hasOwnProperty: 'replacing ur functionz, brakin ur expectationz'
+
+    it "does not crash when trying to access sync or future", ->
+      expect( -> obj.sync ).not.toThrow()
 
   describe 'inheritance', ->
 

@@ -81,7 +81,7 @@ defineMemoizedPerInstanceProperty = (target, propertyName, factory) ->
       delete @[cacheKey]
       Object.defineProperty @, propertyName, value: value, writable:true, configurable: true, enumerable: true # allow overriding the property turning back to default behavior
     get: ->
-      unless @hasOwnProperty(cacheKey) and @[cacheKey]
+      unless Object::hasOwnProperty.call(@, cacheKey) and @[cacheKey]
         Object.defineProperty @, cacheKey, value: factory(@), writable: true, configurable: true, enumerable: false # ensure the cached version is not enumerable
       @[cacheKey]
 
