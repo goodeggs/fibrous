@@ -185,14 +185,12 @@ describe 'fibrous', ->
       name: 'instanceA'
       constructor: (name) -> @name = name if name?
       method1: (arg, cb) -> process.nextTick => cb null, "#{@name}.method1(#{arg})"
-
-    A.static1 = (arg, cb) -> process.nextTick => cb null, "#{@name}.static1(#{arg})"
+      @static1 = (arg, cb) -> process.nextTick => cb null, "#{@name}.static1(#{arg})"
 
     class B extends A
       name: 'instanceB'
       method2: (arg, cb) -> process.nextTick => cb null, "#{@name}.method2(#{arg})"
-
-    B.static2 = (arg, cb) -> process.nextTick => cb null, "#{@name}.static2(#{arg})"
+      @static2 = (arg, cb) -> process.nextTick => cb null, "#{@name}.static2(#{arg})"
 
     a = null
     b = null
