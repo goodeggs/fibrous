@@ -121,8 +121,9 @@ fibrous.middleware = (req, res, next) ->
       try
         next()
       catch e
-        # We expect any errors which bubble up the fiber will be handled by the router
-        console.error('Unexpected error bubble up to the top of the fiber:', e?.stack or e)
+        console.error('Unexpected error bubbled up to the top of the fiber:', e?.stack or e)
+        # Pass error to the middleware chain
+        next(new Error(e?.message or e))
     .run()
 
 # Create a new fibrous function and run it. Handle errors with try/catch or pass an error
