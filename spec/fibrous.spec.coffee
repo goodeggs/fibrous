@@ -174,6 +174,17 @@ describe 'fibrous', ->
         expect(Fiber.current).toBeTruthy()
         done()
 
+    it 'passes error through middleware chain', (done) ->
+      spyOn(console, 'error')
+      next = (err) ->
+        if err?
+          expect(err.message).toBe 'Thrown Error'
+          expect(console.error).toHaveBeenCalled()
+          done()
+        else
+          throw new Error 'Thrown Error'
+      fibrous.middleware {}, {}, next
+
   describe 'Future', ->
     it "exports node-fibers Future", ->
       expect(fibrous.Future).toEqual Future
