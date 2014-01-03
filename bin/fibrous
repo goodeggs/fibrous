@@ -6,33 +6,15 @@ var fibrous = require('..');
 if (['-c', '--coffee'].indexOf(process.argv[2]) != -1) {
   console.log("Starting fibrous coffee REPL...");
   var CoffeeScript = require('coffee-script');
-  var repl = require('coffee-script/lib/coffee-script/repl');
-  repl.start({
+  var coffeeRepl = require('coffee-script/lib/coffee-script/repl');
+  var repl = coffeeRepl.start({
     prompt: "coffee> ",
-
-    // See http://coffeescript.org/documentation/docs/repl.html
-    eval: fibrous (function (input, context, filename) {
-      return (function(input, context, filename, cb) {
-        var Assign, Block, Literal, Value, ast, err, js, _ref1;
-        input = input.replace(/\uFF00/g, '\n');
-        input = input.replace(/^\(([\s\S]*)\n\)$/m, '$1');
-        _ref1 = require('coffee-script/lib/coffee-script/nodes'), Block = _ref1.Block, Assign = _ref1.Assign, Value = _ref1.Value, Literal = _ref1.Literal;
-        try {
-          ast = CoffeeScript.nodes(input);
-          ast = new Block([new Assign(new Value(new Literal('_')), ast, '=')]);
-          js = ast.compile({
-            bare: true,
-            locals: Object.keys(context)
-          });
-          return cb(null, vm.runInContext(js, context, filename));
-        } catch (_error) {
-          err = _error;
-          return cb(prettyErrorMessage(err, filename, input, true));
-        }
-      }).sync(input, context, filename);
-    }),
-
   });
+  evalWithoutFibrous = repl.eval;
+  evalWithFibrous = fibrous(function (input, context, filename) {
+    return evalWithoutFibrous.sync(input, context, filename);
+  });
+  repl.eval = evalWithFibrous.bind(repl);
 }
 else {
   console.log("Starting fibrous node REPL...");
