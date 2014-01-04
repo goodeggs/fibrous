@@ -59,9 +59,45 @@ proxyBuilder = (futureOrSync) ->
   (that) ->
     result =
       if typeof(that) is 'function'
-        func = (futureOrSync is 'future' and futureize or synchronize)(that)
-        func.__proto__ = Object.getPrototypeOf(that)[futureOrSync] if Object.getPrototypeOf(that) isnt Function.prototype
+
+        ize = futureOrSync is 'future' and futureize or synchronize
+        func = ize that
+        proto = Object.getPrototypeOf(that)[futureOrSync] if Object.getPrototypeOf(that) isnt Function.prototype
+        func.__proto__ = proto
+
+        # Transforms an async function that passes multiple arguments
+        # to its callback (in addition to err) into one that passes a
+        # single argument that is an Array of the non-err args that
+        # would be passed to the original callback
+        #
+        # Ex. The request module passes back the response and the body
+        #   request url, (err, response, body) ->
+        #     ...
+        #
+        # This transforms that into something like
+        #
+        #   requestArray url, (err, response_body) ->
+        #     [response, body] = response_body
+        #     ...
+        #
+        # This is useful in Fibrous since synchronized and futureized
+        # functions will only return one value, even if the original
+        # function passes multiple values to its callback
+        #
+        # We add .Array to .sync and .future here so that this works:
+        #     [response, body] = request.sync.Array url
+        #
+        thatArrayReturn = ((f, this_) ->
+            (args..., callback) ->
+              args.push (err, cbArgs...) ->
+                callback err, cbArgs
+              f.apply this_, args) that, that
+
+        func.Array = ize thatArrayReturn
+        func.Array.__proto__ = proto
+
         func
+
       else
         Object.create(Object.getPrototypeOf(that) and Object.getPrototypeOf(that)[futureOrSync] or Object::)
 
