@@ -180,4 +180,4 @@ fibrous.Future = Future
 fibrous.Fiber = Fiber
 
 packageInfo = require '../package'
-fibrous.version = packageInfo.version
+fibrous.version = packageInfo.version + "-ccheever"
