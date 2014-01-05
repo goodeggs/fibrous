@@ -175,5 +175,9 @@ fibrous.run = (fn, cb) ->
     throw err if err?
   fibrous(fn)(cb)
 
-# Export Future for fibrous users
+# Export Future and Fiber for fibrous users
 fibrous.Future = Future
+fibrous.Fiber = Fiber
+
+packageInfo = require '../package'
+fibrous.version = packageInfo.version
