@@ -28,7 +28,7 @@ futureize = (asyncFn) ->
     # Don't create unnecessary fibers and futures
     return asyncFn.__fibrousFutureFn__.apply(fnThis, args) if asyncFn.__fibrousFutureFn__
 
-    future = new Future
+    future = new Future()
     args.push(future.resolver())
     try
       asyncFn.apply(fnThis, args)
