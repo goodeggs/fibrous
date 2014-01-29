@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "jasmine-node": "1.8.x",
-    "coffee-script": "*"
+    "coffee-script": "1.6.x"
   },
   "main": "lib/fibrous",
   "bin": {
