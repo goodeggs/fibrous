@@ -5,6 +5,8 @@ Easily mix asynchronous and synchronous programming styles in node.js.
 
 *A project by [Good Eggs](http://goodeggsinc.com) at https://github.com/goodeggs/fibrous.*
 
+[![Build Status](https://travis-ci.org/goodeggs/fibrous.png)](https://travis-ci.org/goodeggs/fibrous)
+
 Benefits
 --------
 
