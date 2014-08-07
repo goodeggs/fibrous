@@ -16,7 +16,7 @@ module.exports = fibrous = (fn) ->
       var callback = args.pop();
       if (!(callback instanceof Function))
         throw new Error('Fibrous method expects a callback');
-      future = futureFn.apply(this, args);
+      var future = futureFn.apply(this, args);
       future.resolve(callback);
     };
   """
