@@ -41,8 +41,9 @@ describe 'fibrous', ->
           toDoFn()
 
     describe 'creates an async method', ->
-      it 'which has length > 0', ->
-        expect(asyncObj.fibrousAdd.length).toBeGreaterThan 0
+      it 'which has proper arity', ->
+        expect(asyncObj.fibrousNoAdditionalFutures.length).toBe 1
+        expect(asyncObj.fibrousAdd.length).toBe 2
 
       it 'which runs in a fiber', (done) ->
         testRunnerFiber = Fiber.current
