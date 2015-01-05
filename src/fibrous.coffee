@@ -1,3 +1,8 @@
+# Initialize fibrous exactly once since its initialization is not idempotent
+if process.fibrous?
+  module.exports = process.fibrous
+  return
+
 Fiber = require 'fibers'
 Future = require 'fibers/future'
 
@@ -5,7 +10,7 @@ Future = require 'fibers/future'
 # Keep a reference so we can use theirs later.
 functionWithFiberReturningFuture = Function::future
 
-module.exports = fibrous = (fn) ->
+module.exports = process.fibrous = fibrous = (fn) ->
   futureFn = functionWithFiberReturningFuture.call(fn) # handles all the heavy lifting of inheriting an existing fiber when appropriate
   # Don't use (args...) here because asyncFn.length == 0 when we do.
   # A common (albeit short-sighted) pattern used in node.js code is checking

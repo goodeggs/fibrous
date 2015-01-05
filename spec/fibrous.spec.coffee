@@ -165,7 +165,7 @@ describe 'fibrous', ->
       , (err) ->
         expect(err).toEqual(new Error('async error'))
         done()
-     
+
   describe 'middleware', ->
 
     it 'runs in a fiber', (done) ->
@@ -186,6 +186,16 @@ describe 'fibrous', ->
 
     it "does not crash when trying to access sync or future", ->
       expect( -> obj.sync ).not.toThrow()
+
+  describe 'initialization', ->
+    it 'does not throw an error when required multiple times', ->
+      fibrousPath = require.resolve '../lib/fibrous'
+      expect(require.cache[fibrousPath]).toBeDefined()
+      delete require.cache[fibrousPath]
+
+      expect ->
+        fibrous = require '../lib/fibrous'
+      .not.toThrow()
 
   describe 'inheritance', ->
 
