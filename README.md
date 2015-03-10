@@ -3,9 +3,10 @@ Fibrous
 
 Easily mix asynchronous and synchronous programming styles in node.js.
 
-*A project by [Good Eggs](http://goodeggsinc.com) at https://github.com/goodeggs/fibrous.*
-
-[![Build Status](https://travis-ci.org/goodeggs/fibrous.png)](https://travis-ci.org/goodeggs/fibrous)
+[![build status][travis-badge]][travis-link]
+[![npm version][npm-badge]][npm-link]
+[![mit license][license-badge]][license-link]
+[![we're hiring][hiring-badge]][hiring-link]
 
 Benefits
 --------
@@ -252,6 +253,8 @@ describe('My Spec', function() {
 If an asynchronous method called through fibrous produces an error, the
 spec helper will fail the spec.
 
+[mocha-fibers](https://github.com/tzeskimo/mocha-fibers) provides a fiber wrapper for [mocha](http://mochajs.org/).
+
 If you write a helper for other testing frameworks, we'd love to include it in the project.
 
 ### Console
@@ -410,29 +413,11 @@ Contributors
 * Alon Salant ([asalant](https://github.com/asalant))
 * Bob Zoller ([bobzoller](https://github.com/bobzoller))
 
-License
--------
-
-(The MIT License)
-
-Copyright (c) 2012 Good Eggs, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+[travis-badge]: http://img.shields.io/travis/goodeggs/fibrous/master.svg?style=flat-square
+[travis-link]: https://travis-ci.org/goodeggs/fibrous
+[npm-badge]: http://img.shields.io/npm/v/fibrous.svg?style=flat-square
+[npm-link]: https://www.npmjs.org/package/fibrous
+[license-badge]: http://img.shields.io/badge/license-mit-blue.svg?style=flat-square
+[license-link]: LICENSE.md
+[hiring-badge]: https://img.shields.io/badge/we're_hiring-yes-brightgreen.svg?style=flat-square
+[hiring-link]: http://goodeggs.jobscore.com/?detail=Open+Source&sid=161
