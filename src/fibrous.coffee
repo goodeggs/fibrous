@@ -18,6 +18,7 @@ module.exports = fibrous = (fn) ->
     future.resolve callback
   Object.defineProperty asyncFn, '__fibrousFn__', value: fn, enumerable: false
   Object.defineProperty asyncFn, '__fibrousFutureFn__', value: futureFn, enumerable: false
+  asyncFn.toString = -> "fibrous(#{fn.toString()})"
   asyncFn
 
 

@@ -71,6 +71,9 @@ describe 'fibrous', ->
       expect('__fibrousFn__' not in Object.keys(asyncObj.fibrousAdd)).toBeTruthy()
       expect('__fibrousFutureFn__' not in Object.keys(asyncObj.fibrousAdd)).toBeTruthy()
 
+    it 'includes the wrapped function body in toString', ->
+      expect(asyncObj.fibrousAdd.toString()).toContain 'asyncObj.sync.addValue'
+
     describe 'from within a fiber', ->
 
       it 'works in a fiber', ->
@@ -165,7 +168,7 @@ describe 'fibrous', ->
       , (err) ->
         expect(err).toEqual(new Error('async error'))
         done()
-     
+
   describe 'middleware', ->
 
     it 'runs in a fiber', (done) ->
