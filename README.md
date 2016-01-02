@@ -338,6 +338,16 @@ app.use(express.json());
 app.use(fibrous.middleware);
 ```
 
+Route-specific middleware (e.g. `multer`) can also cause problems:
+
+```javascript
+// might not work
+app.get("/upload", upload("img"), function(req, res) { });
+
+// should work
+app.get("/upload", upload("img"), fibrous.middleware, function(req, res) { });
+```
+
 Behind The Scenes
 -----------------
 
