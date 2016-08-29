@@ -198,6 +198,13 @@ describe 'fibrous', ->
       method1: (arg, cb) -> process.nextTick => cb null, "#{@name}.method1(#{arg})"
       @static1 = (arg, cb) -> process.nextTick => cb null, "#{@name}.static1(#{arg})"
 
+    Object.defineProperty(A::, 'nonEnumMethod', {
+      enumerable: false
+      writable: true
+      value: (arg, cb) ->
+        process.nextTick => cb null, "#{@name}.nonEnumMethod(#{arg})"
+    })
+
     class B extends A
       name: 'instanceB'
       method2: (arg, cb) -> process.nextTick => cb null, "#{@name}.method2(#{arg})"
@@ -333,6 +340,27 @@ describe 'fibrous', ->
       expect(b.sync.method2(6)).toEqual 'instanceB.method2(6)'
       expect(bCat.sync.method1(3)).toEqual 'cat.method1(3)'
       expect(bCat.sync.method2(5)).toEqual 'cat.method2(5)'
+
+    describe 'non enumerable properties like methods defined in es6 classes', ->
+      it 'allows calling those methods as well', ->
+        expect(a.future.nonEnumMethod(4).wait()).toEqual 'instanceA.nonEnumMethod(4)'
+        expect(a.sync.nonEnumMethod(4)).toEqual 'instanceA.nonEnumMethod(4)'
+
+      it 'also sets those methods as non-eumerable on the proxy', ->
+        expect(Object.getOwnPropertyDescriptor(A::future, 'nonEnumMethod').enumerable).toBeFalsy()
+        expect(Object.getOwnPropertyDescriptor(A::sync, 'nonEnumMethod').enumerable).toBeFalsy()
+
+      it 'leaves other properties as enumerable', ->
+        expect(Object.getOwnPropertyDescriptor(A::future, 'method1').enumerable).toBeTruthy()
+        expect(Object.getOwnPropertyDescriptor(A::sync, 'method1').enumerable).toBeTruthy()
+
+      describe 'when the non-enumerable method is overriden', ->
+        beforeEach ->
+          a.nonEnumMethod = (arg, cb) ->
+            process.nextTick => cb null, "#{@name}.nonEnumMethodAltVersion(#{arg})"
+
+        it 'creates the proxy without any errors which would occur if we used defineProperty for everything', ->
+          expect(a.sync.nonEnumMethod(4)).toEqual 'instanceA.nonEnumMethodAltVersion(4)'
 
     it 'does not copy over overwritten Object.prototype methods (like toString) which can break some behaviors (eg. toStringing the sync Object)', ->
       b.toString = -> 'alternate toString'

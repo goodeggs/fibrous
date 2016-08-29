@@ -45,14 +45,27 @@ synchronize = (asyncFn) ->
 
     asyncFn.future.apply(@, args).wait()
 
+skipProps = {
+  constructor: true
+  sync: true
+  future: true
+}
+
 proxyAll = (src, target, proxyFn) ->
-  for key in Object.keys(src) # Gives back the keys on this object, not on prototypes
+  for key in Object.getOwnPropertyNames(src) # Gives back the keys (including non-enumerable) on this object, not on prototypes
     do (key) ->
+      return if skipProps[key]
       return if Object::[key]? # Ignore any rewrites of toString, etc which can cause problems
-      return if Object.getOwnPropertyDescriptor(src, key).get? # getter methods can have unintentional side effects when called in the wrong context
+      propertyDescriptor = Object.getOwnPropertyDescriptor(src, key)
+      return if propertyDescriptor.get? # getter methods can have unintentional side effects when called in the wrong context
       return unless typeof src[key] is 'function' # getter methods may throw an exception in some contexts
 
-      target[key] = proxyFn(key)
+      Object.defineProperty(target, key, {
+        configurable: propertyDescriptor.configurable
+        enumerable: propertyDescriptor.enumerable
+        writable: propertyDescriptor.writable
+        value: proxyFn(key)
+      })
 
   target
 
