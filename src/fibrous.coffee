@@ -10,12 +10,16 @@ module.exports = fibrous = (fn) ->
   # Don't use (args...) here because asyncFn.length == 0 when we do.
   # A common (albeit short-sighted) pattern used in node.js code is checking
   # Fn.length > 0 to determine if a function is async (accepts a callback).
-  asyncFn = (cb) ->
-    args = if 1 <= arguments.length then Array.prototype.slice.call(arguments, 0) else []
-    callback = args.pop()
-    throw new Error("Fibrous method expects a callback") unless callback instanceof Function
-    future = futureFn.apply(@, args)
-    future.resolve callback
+  eval """
+    var asyncFn = function(#{('a' for [1..fn.length+1]).join(',')}) {
+      var args = Array.prototype.slice.call(arguments, 0);
+      var callback = args.pop();
+      if (!(callback instanceof Function))
+        throw new Error('Fibrous method expects a callback');
+      var future = futureFn.apply(this, args);
+      future.resolve(callback);
+    };
+  """
   Object.defineProperty asyncFn, '__fibrousFn__', value: fn, enumerable: false
   Object.defineProperty asyncFn, '__fibrousFutureFn__', value: futureFn, enumerable: false
   asyncFn.toString = -> "fibrous(#{fn.toString()})"
